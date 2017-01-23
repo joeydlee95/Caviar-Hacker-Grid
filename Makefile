@@ -1,6 +1,6 @@
 CXX=g++
 CXXOPTIMIZE= -O0
-BOOST=
+BOOST=-lboost_system
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -std=c++0x
 LIBRARIES=$(BOOST)
 USERID=lab2_joanne_richard
@@ -13,7 +13,6 @@ config_parser.cc:
     g++ nginx-configparser/$@ -std=c++0x -g -Wall -c -o config_parser
 
 webserver: $(UTIL_CLASSES)
-	mkdir -p targets 
 	$(CXX) -o $@ $^ $(CXXFLAGS) $@.cc $(LIBRARIES)
 
 tests: 
