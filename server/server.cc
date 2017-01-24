@@ -1,17 +1,13 @@
 
 // based off of: http://www.boost.org/doc/libs/1_54_0/doc/html/boost_asio/example/cpp11/echo/async_tcp_echo_server.cpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~
-//
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// http://think-async.com/asio/boost_asio_1_5_3/doc/html/boost_asio/example/local/stream_server.cpp
 
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+
 #include <vector>
 #include "server.h"
 
@@ -27,9 +23,9 @@ void Session::start() {
 
 void Session::do_read() {
   auto self(shared_from_this());
-  socket_.async_read_some(boost::asio::buffer(data_, max_length),
+  socket_.async_read_some(boost::asio::buffer(data_),
     [this, self](boost::system::error_code ec, std::size_t length) {
-      if (!ec) {
+      if (!ec && length > 0) {
         printf("Incoming Data length %lu:\n", length);
 
         for (std::size_t i = 0; i < length; i++) {

@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <boost/asio.hpp>
+#include <boost/array.hpp>
 using boost::asio::ip::tcp;
 
 
@@ -26,7 +27,7 @@ private:
 
   tcp::socket socket_;
   enum { max_length = 1024 };
-  std::vector<uint8_t> data_;
+  boost::array<char, max_length> data_;
 };
 
 class Server 
