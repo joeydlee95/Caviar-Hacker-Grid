@@ -3,7 +3,7 @@ CXXOPTIMIZE= -O0
 BOOST=-lboost_system
 
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST)
-UTIL_CLASSES=nginx-configparser/config_parser.cc server/server.cc
+UTIL_CLASSES=nginx-configparser/config_parser.cc nginx-configparser/config_parser.h server/server.cc server/server.h
 
 .PHONY: all clean
 all: webserver
