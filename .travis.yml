@@ -1,0 +1,6 @@
+language: cpp
+script: CHANGE_ME
+addons:
+ apt:
+  packages:
+  - libboost-all-dev
