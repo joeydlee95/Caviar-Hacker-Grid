@@ -12,6 +12,7 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <vector>
 #include "server.h"
 
 using boost::asio::ip::tcp;
@@ -28,7 +29,6 @@ void Session::do_read() {
   auto self(shared_from_this());
   socket_.async_read_some(boost::asio::buffer(data_, max_length),
     [this, self](boost::system::error_code ec, std::size_t length) {
-      // valid connection
       if (!ec) {
         printf("Incoming Data:\n");
         for (std::size_t i = 0; i < length; i++) {
