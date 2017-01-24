@@ -7,8 +7,8 @@
 #define SERVER_H
 
 #include <vector>
+#include <string>
 #include <boost/asio.hpp>
-#include <boost/array.hpp>
 using boost::asio::ip::tcp;
 
 
@@ -27,7 +27,7 @@ private:
 
   tcp::socket socket_;
   enum { max_length = 1024 };
-  boost::array<char, max_length> data_;
+  std::string data_;
 };
 
 class Server 

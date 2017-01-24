@@ -23,9 +23,10 @@ void Session::start() {
 
 void Session::do_read() {
   auto self(shared_from_this());
-  socket_.async_read_some(boost::asio::buffer(data_),
+  data_ = std::string(2048, 0);
+  socket_.async_read_some(boost::asio::buffer(&data_[0], data_.size()),
     [this, self](boost::system::error_code ec, std::size_t length) {
-      if (!ec && length > 0) {
+      if (!ec) {
         printf("Incoming Data length %lu:\n", length);
 
         for (std::size_t i = 0; i < length; i++) {
@@ -39,8 +40,9 @@ void Session::do_read() {
 
 void Session::do_write(std::size_t length) {
   auto self(shared_from_this());
-
-  boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
+  std::string header_string = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+  data_.insert(0, header_string);
+  boost::asio::async_write(socket_, boost::asio::buffer(&data_[0], length + header_string.length()),
     [this, self](boost::system::error_code ec, std::size_t len) {
       if (!ec) {
         printf("Outgoing Data:\n");
