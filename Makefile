@@ -1,22 +1,16 @@
-CXX=g++
+$CXX=g++
 CXXOPTIMIZE= -O0
-BOOST=
-CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -std=c++0x
-LIBRARIES=$(BOOST)
-USERID=lab2_joanne_richard
-UTIL_CLASSES=nginx-configparser/config_parser.cc
+BOOST=-lboost_system
 
-.PHONY: all
+CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST)
+UTIL_CLASSES=nginx-configparser/config_parser.cc server/server.cc
+
+.PHONY: all clean
 all: webserver
 
-config_parser.cc: 
-    g++ nginx-configparser/$@ -std=c++0x -g -Wall -c -o config_parser
-
 webserver: $(UTIL_CLASSES)
-	mkdir -p targets 
-	$(CXX) -o $@ $^ $(CXXFLAGS) $@.cc $(LIBRARIES)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $@.cc
+tests: $(UTIL_CLASSES)
 
-tests: 
-.PHONY: clean
 clean:
-	rm -rf nginx-config_parser/*.o nginx-config_parser/config_parser nginx-config_parser/config_parser_test webserver
+	rm -rf nginx-configparser/*.o nginx-configparser/config_parser nginx-configparser/config_parser_test webserver *.dSYM
