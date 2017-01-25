@@ -49,8 +49,6 @@ void Session::do_write(std::size_t length) {
         for (std::size_t i = 0; i < len; i++) {
             printf("%c", data_[i]);
         }
-
-        do_read();
       }
   });
 }
