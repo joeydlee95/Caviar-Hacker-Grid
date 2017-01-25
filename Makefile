@@ -8,6 +8,8 @@ UTIL_CLASSES=nginx-configparser/config_parser.cc server/server.cc
 .PHONY: all clean
 all: webserver
 
+nginx-configparser/config_parser.cc: nginx-configparser/config_parser.h
+
 webserver: $(UTIL_CLASSES)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $@.cc
 tests: $(UTIL_CLASSES)
