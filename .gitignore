@@ -124,7 +124,7 @@ ENV/
 .ropeproject
 
 # Mac build process
-.dSYM
+.dSYM/
 # Exectables for this project
 config_parser
 config_parser_test
