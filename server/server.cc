@@ -25,7 +25,12 @@ void Session::do_read() {
 
 
   auto self(shared_from_this());
-  data_ = std::string(socket_.available(), 0);
+  std::size_t bytes;
+  while((bytes = socket_.available()) == 0) {
+    continue;
+  }
+
+  data_ = std::string(bytes, 0);
   socket_.async_read_some(boost::asio::buffer(&data_[0], data_.size()),
     [this, self](boost::system::error_code ec, std::size_t length) {
       if (!ec) {
