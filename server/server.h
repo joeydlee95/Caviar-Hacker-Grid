@@ -42,7 +42,4 @@ private:
   tcp::socket socket_;
 };
 
-
-
-
 #endif

@@ -15,4 +15,4 @@ webserver: $(UTIL_CLASSES)
 tests: $(UTIL_CLASSES)
 
 clean:
-	rm -rf nginx-configparser/*.o nginx-configparser/config_parser nginx-configparser/config_parser_test webserver *.dSYM
+	rm -rf *.o webserver *.dSYM
