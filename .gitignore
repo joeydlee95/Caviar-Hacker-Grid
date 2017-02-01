@@ -128,4 +128,5 @@ ENV/
 # Exectables for this project
 config_parser
 config_parser_test
+server_test
 webserver
