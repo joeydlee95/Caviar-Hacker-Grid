@@ -32,4 +32,4 @@ test: $(TESTS)
 
 
 clean:
-	rm -rf *.o nginx-configparser/config_parser nginx-configparser/config_parser_test webserver *.dSYM *.a
+	rm -rf *.o nginx-configparser/config_parser $(TESTS) webserver *.dSYM *.a
