@@ -22,8 +22,8 @@ libgtest.a:
 	ar -rv libgtest.a gtest-all.o
 
 %_test: %.cc %_test.cc libgtest.a
-	$(CXX)  $(GTEST_FLAGS) -pthread $(BOOST) $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a -o $@
-	
+	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -o $@
+
 test: $(TESTS)
 	for test in $(TESTS); do ./$$test ; done
 
