@@ -22,25 +22,26 @@ void Session::start() {
 }
 
 void Session::do_read() {
-
-
   auto self(shared_from_this());
-  std::size_t bytes;
-  while((bytes = socket_.available()) == 0) {
+
+  //trying to the size of incoming messege
+  std::size_t buffer_size;
+  //blocks the session until it gets a non-empty incoming string
+  while((buffer_size = socket_.available()) == 0) {
     continue;
   }
 
-  data_ = std::string(bytes, 0);
+  data_ = std::string(buffer_size, 0);
   socket_.async_read_some(boost::asio::buffer(&data_[0], data_.size()),
-    [this, self](boost::system::error_code ec, std::size_t length) {
+    [this, self](boost::system::error_code ec, std::size_t len) {
       if (!ec) {
-        printf("Incoming Data length %lu:\n", length);
+        printf("Incoming Data length %lu:\n", len);
 
-        for (std::size_t i = 0; i < length; i++) {
+        for (std::size_t i = 0; i < len; i++) {
             printf("%c", data_[i]);
         }
 
-        do_write(length);
+        do_write(len);
       }
   });
 }
@@ -58,6 +59,8 @@ void Session::do_write(std::size_t length) {
         }
       }
   });
+
+  //session just ends after wrtie
 }
 
 
