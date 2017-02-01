@@ -1,6 +1,9 @@
 language: cpp
-script: CHANGE_ME
+dist: trusty
+sudo: required
+script: make test  
 addons:
  apt:
   packages:
-  - libboost-all-dev
+    - libboost-all-dev
+
