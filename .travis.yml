@@ -1,6 +1,12 @@
-language: cpp
-script: CHANGE_ME
+os:
+  - linux
+dist: trusty
+sudo: required
+compiler: 
+  - gcc
+script: make test  
 addons:
  apt:
   packages:
   - libboost-all-dev
+
