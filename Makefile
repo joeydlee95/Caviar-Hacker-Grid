@@ -7,7 +7,7 @@ CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST)
 UTIL_CLASSES=nginx-configparser/config_parser.cc server/server.cc
 TESTS=nginx-configparser/config_parser_test server/server_test
 
-.PHONY: all clean test
+.PHONY: all clean test gcov
 all: webserver
 
 nginx-configparser/config_parser.cc: nginx-configparser/config_parser.h
