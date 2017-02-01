@@ -1,12 +1,9 @@
-os:
-  - linux
+language: cpp
 dist: trusty
 sudo: required
-compiler: 
-  - gcc
 script: make test  
 addons:
  apt:
   packages:
-  - libboost-all-dev
+    - libboost-all-dev
 
