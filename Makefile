@@ -21,10 +21,11 @@ libgtest.a:
 	$(CXX) $(GTEST_FLAGS) -I$(GTEST_DIR) -pthread -c $(GTEST_DIR)/src/gtest-all.cc	
 	ar -rv libgtest.a gtest-all.o
 
+gcov: GTEST_FLAGS += -fprofile-arcs -ftest-coverage
 %_test: %.cc %_test.cc libgtest.a
-	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -fprofile-arcs -ftest-coverage -o $@
+	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -o $@
 
-gcov: test
+gcov: test clean
 	for test in $(TESTS:%_test=%.cc); do gcov -r $$test; done
 
 test: $(TESTS)
