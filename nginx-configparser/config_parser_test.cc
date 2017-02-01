@@ -4,15 +4,6 @@
 #include "gtest/gtest.h"
 #include "config_parser.h"
 
-TEST(NginxConfigParserTest, SimpleConfig) { //first is test case bracket, second is the test cases name
-  NginxConfigParser parser;
-  NginxConfig out_config;
-
-  bool success = parser.Parse("example_config", &out_config);
-
-  EXPECT_TRUE(success);
-}
-
 TEST(NginxConfigTest, ToString) {
   NginxConfigStatement statement;
   statement.tokens_.push_back("foo");
@@ -31,7 +22,7 @@ protected:
   NginxConfig out_config_;
 };
 
-TEST_F(NginxStringConfigTest, AnotherSimpleConfig) {
+TEST_F(NginxStringConfigTest, SimpleConfig) {
   
   EXPECT_TRUE(ParseString("foo bar;")); // note that we can treat the expects as straems
   EXPECT_EQ(1, out_config_.statements_.size()) 

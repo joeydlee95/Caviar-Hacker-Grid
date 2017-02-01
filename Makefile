@@ -21,14 +21,13 @@ libgtest.a:
 	$(CXX) $(GTEST_FLAGS) -I$(GTEST_DIR) -pthread -c $(GTEST_DIR)/src/gtest-all.cc	
 	ar -rv libgtest.a gtest-all.o
 
-%_test: %.cc libgtest.a
+%_test: %.cc %_test.cc libgtest.a
 	$(CXX)  $(GTEST_FLAGS) -pthread $(BOOST) $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a -o $@
 # sh nginx-configparser/build_tests.sh
 # ./$(TESTS)
 
 test: $(TESTS)
 	for test in $(TESTS); do ./$$test ; done
-
 
 
 clean:
