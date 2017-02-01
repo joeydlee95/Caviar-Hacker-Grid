@@ -4,8 +4,8 @@ BOOST=-lboost_system
 GTEST_DIR=googletest/googletest
 GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include 
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST) 
-UTIL_CLASSES=nginx-configparser/config_parser.cc server/server.cc
-TESTS=nginx-configparser/config_parser_test server/server_test
+UTIL_CLASSES=nginx-configparser/config_parser.cc server/server.cc server/http.cc
+TESTS=nginx-configparser/config_parser_test server/server_test server/http_test
 
 .PHONY: all clean test
 all: webserver
