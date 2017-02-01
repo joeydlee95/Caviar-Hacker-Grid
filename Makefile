@@ -22,11 +22,14 @@ libgtest.a:
 	ar -rv libgtest.a gtest-all.o
 
 %_test: %.cc %_test.cc libgtest.a
-	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -o $@
+	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -fprofile-arcs -ftest-coverage -o $@
+
+gcov: test
+	for test in $(TESTS:%_test=%.cc); do gcov -r $$test; done
 
 test: $(TESTS)
 	for test in $(TESTS); do ./$$test ; done
 
 
 clean:
-	rm -rf *.o nginx-configparser/config_parser $(TESTS) webserver *.dSYM *.a
+	rm -rf *.o nginx-configparser/config_parser $(TESTS) webserver *.dSYM *.a *.gcda *.gcno *.gcojv

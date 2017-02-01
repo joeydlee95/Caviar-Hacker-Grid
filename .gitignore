@@ -130,3 +130,9 @@ config_parser
 config_parser_test
 server_test
 webserver
+
+# gcc coverage testing tool files
+
+*.gcno
+*.gcda
+*.gcov
