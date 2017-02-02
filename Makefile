@@ -32,6 +32,8 @@ gcov: test
 test: $(TESTS) mock_webserver
 	for test in $(TESTS); do ./$$test ; done
 	./webserver_test
+
+integration: 
 	python integration_test.py
 
 libgmock.a:
