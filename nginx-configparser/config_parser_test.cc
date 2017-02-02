@@ -4,6 +4,25 @@
 #include "gtest/gtest.h"
 #include "config_parser.h"
 
+TEST(NginxConfigParserTest, SimpleConfig) { //first is test case bracket, second is the test cases name
+  NginxConfigParser parser;
+  NginxConfig out_config;
+
+  bool success = parser.Parse("test_config", &out_config);
+
+  EXPECT_TRUE(success);
+}
+
+TEST(NginxConfigParserTest, NonexistentConfig) { //first is test case bracket, second is the test cases name
+  NginxConfigParser parser;
+  NginxConfig out_config;
+
+  bool success = parser.Parse("dead_config", &out_config);
+
+  EXPECT_FALSE(success);
+}
+
+
 TEST(NginxConfigTest, ToString) {
   NginxConfigStatement statement;
   statement.tokens_.push_back("foo");
@@ -21,6 +40,35 @@ protected:
   NginxConfigParser parser_;
   NginxConfig out_config_;
 };
+
+TEST_F(NginxStringConfigTest, ToString) {
+  ASSERT_TRUE(ParseString("port 8000;")); 
+  EXPECT_EQ(out_config_.ToString(0), "port 8000;\n");
+}
+
+TEST_F(NginxStringConfigTest, EmbeddedToString) {
+  ASSERT_TRUE(ParseString("server { port 8000; }")); 
+  EXPECT_EQ(out_config_.ToString(0), "server {\n  port 8000;\n}\n");
+  EXPECT_EQ(out_config_.ToString(1), "  server {\n    port 8000;\n  }\n");
+}
+
+
+TEST_F(NginxStringConfigTest, findTest) {
+  std::string s = "port";
+  ASSERT_TRUE(ParseString("port 8000;")); 
+  EXPECT_TRUE(out_config_.find(s));
+  EXPECT_EQ(s, "8000");
+
+  EXPECT_FALSE(out_config_.find(s)); 
+}
+
+TEST_F(NginxStringConfigTest, findTestEmbeddedBlock) {
+  std::string s = "port";
+  ASSERT_TRUE(ParseString("server {\nport 8000;\n}")); 
+  EXPECT_FALSE(out_config_.find(s)); 
+}
+
+
 
 TEST_F(NginxStringConfigTest, SimpleConfig) {
   
@@ -66,4 +114,19 @@ TEST_F(NginxStringConfigTest, EmbeddedBlockConfig) {
 
 TEST_F(NginxStringConfigTest, EmptyConfig) {
   EXPECT_TRUE(ParseString(""));
+}
+
+TEST_F(NginxStringConfigTest, SimpleCommentConfig) {
+  EXPECT_TRUE(ParseString("# test"));
+}
+
+TEST_F(NginxStringConfigTest, ComplexCommentConfig) {
+  EXPECT_TRUE(ParseString("server\n { server2 \n{ # test \ntestlisten 80;# test \n} \n}"));
+}
+
+
+TEST_F(NginxStringConfigTest, SingleQuoteTest) {
+  EXPECT_TRUE(ParseString("port \'8000\';"));
+  EXPECT_EQ(out_config_.statements_[0]->tokens_[0], "port");
+  EXPECT_EQ(out_config_.statements_[0]->tokens_[1], "\'8000\'");
 }
