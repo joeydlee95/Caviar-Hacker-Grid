@@ -26,7 +26,7 @@ libgtest.a:
 	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -o $(@:%.cc=%)
 
 gcov: GTEST_FLAGS += -fprofile-arcs -ftest-coverage
-gcov: test clean
+gcov: test
 	for test in $(TESTS:%_test.cc=%.cc); do gcov -r $$test; done
 
 test: $(TESTS)
