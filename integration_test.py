@@ -4,7 +4,7 @@ import subprocess
 import os
 ## Global Vars ##
 passing = True
-port = 8080
+port = 3000;
 #TODO: add a data strx to hold names of failed tests
 
 
