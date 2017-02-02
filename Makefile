@@ -5,9 +5,12 @@ GTEST_DIR=googletest/googletest
 GMOCK_DIR=googletest/googlemock
 GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include 
 GMOCK_FLAGS=-isystem $(GMOCK_DIR)/include
-CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST) 
-UTIL_CLASSES=nginx-configparser/config_parser.cc server/server.cc
-TESTS=nginx-configparser/config_parser_test server/server_test
+CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST)
+CLASSES=nginx-configparser/config_parser server/server
+GCOV=config_parser.cc server.cc
+UTIL_CLASSES=$(CLASSES:=.cc)
+TESTS=$(CLASSES:=_test.cc)
+
 .PHONY: all clean test gcov
 all: webserver
 
@@ -20,17 +23,18 @@ webserver: $(UTIL_CLASSES)
 
 
 libgtest.a: 
-	$(CXX) $(GTEST_FLAGS) -I$(GTEST_DIR) -pthread -c $(GTEST_DIR)/src/gtest-all.cc	
+	$(CXX) $(GTEST_FLAGS) -I$(GTEST_DIR) -pthread -c $(GTEST_DIR)/src/gtest-all.cc  
 	ar -rv libgtest.a gtest-all.o
 
-%_test: %.cc %_test.cc libgtest.a
-	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -fprofile-arcs -ftest-coverage -o $@
+%_test.cc: %.cc libgtest.a
+	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -o $(@:%.cc=%)
 
+gcov: GTEST_FLAGS += -fprofile-arcs -ftest-coverage
 gcov: test
-	for test in $(TESTS:%_test=%.cc); do gcov -r $$test; done
+	for test in $(GCOV); do gcov -r $$test; done
 
 test: $(TESTS)
-	for test in $(TESTS); do ./$$test ; done
+	for test in $(TESTS:%.cc=%); do ./$$test ; done
 
 libgmock.a:
 	g++ -isystem ${GTEST_DIR}/include -I${GTEST_DIR} -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} -pthread -c ${GTEST_DIR}/src/gtest-all.cc
@@ -42,4 +46,6 @@ mock_webserver: libgmock.a
 	./webserver_test
 
 clean:
-	rm -rf *.o nginx-configparser/config_parser $(TESTS) webserver *.dSYM *.a *.gcda *.gcno *.gcov
+	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
+	rm -rf nginx-configparser/*.a nginx-configparser/*.gcda nginx-configparser/*.gcno nginx-configparser/*.gcov
+	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
