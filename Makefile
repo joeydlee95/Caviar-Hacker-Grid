@@ -22,14 +22,15 @@ libgtest.a:
 	ar -rv libgtest.a gtest-all.o
 
 gcov: GTEST_FLAGS += -fprofile-arcs -ftest-coverage
-%_test: %.cc %_test.cc libgtest.a
-	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -o $@
+%_test.cc: %.cc libgtest.a
+	echo "asdf"
+	$(CXX) $(GTEST_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS:=.cc) $(GTEST_DIR)/src/gtest_main.cc libgtest.a $(BOOST) -o $(@:%.cc=%)
 
 gcov: test clean
 	for test in $(TESTS:%_test=%.cc); do gcov -r $$test; done
 
-test: $(TESTS)
-	for test in $(TESTS); do ./$$test ; done
+test: nginx-configparser/config_parser_test.cc server/server_test.cc
+	for test in $(TESTS:%.cc=%); do ./$$test ; done
 
 
 clean:
