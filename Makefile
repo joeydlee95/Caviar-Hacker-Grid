@@ -34,4 +34,6 @@ test: $(TESTS)
 
 
 clean:
-	rm -rf *.o nginx-configparser/config_parser $(TESTS:%.cc=%) webserver *.dSYM *.a *.gcda *.gcno *.gcov
+	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
+	rm -rf nginx-config_parser/*.a nginx-config_parser/*.gcda nginx-config_parser/*.gcno nginx-config_parser/*.gcov
+	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
