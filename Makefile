@@ -29,8 +29,10 @@ libgtest.a:
 gcov: test
 	for test in $(TESTS:%_test=%.cc); do gcov -r $$test; done
 
-test: $(TESTS)
+test: $(TESTS) mock_webserver
 	for test in $(TESTS); do ./$$test ; done
+	./webserver_test
+	python integration_test.py
 
 libgmock.a:
 	g++ -isystem ${GTEST_DIR}/include -I${GTEST_DIR} -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} -pthread -c ${GTEST_DIR}/src/gtest-all.cc
@@ -40,6 +42,7 @@ libgmock.a:
 mock_webserver: libgmock.a 
 	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) $(UTIL_CLASSES) webserver.cc -pthread webserver_test.cc $(GMOCK_DIR)/src/gmock_main.cc libgmock.a $(BOOST) -o webserver_test
 	./webserver_test
+	python integration_test.py
 
 clean:
 	rm -rf *.o nginx-configparser/config_parser $(TESTS) webserver *.dSYM *.a *.gcda *.gcno *.gcov
