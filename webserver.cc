@@ -1,31 +1,31 @@
-#include "nginx-configparser/config_parser.h"
-#include "server/server.h"
-#include <cstdlib>
-#include <string>
-
+#include "webserver.h"
 #include <boost/asio.hpp>
-
-int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    printf("Usage: ./webserver <path to config file>\n");
-    return 1;
-  }
-
-  NginxConfigParser config_parser;
-  NginxConfig config;
-  
-  if (!config_parser.Parse(argv[1], &config)) {
+bool Webserver::parse_config(const char* file_name){
+  if (!parser_->Parse(file_name, config_)) {
     printf("Invalid config file");
-    return 1;
+    return false;
   }
+  return true;
 
+}
 
-  std::string port_str = "";
-  if (!config.find(port_str)) {
+bool Webserver::get_port_from_config(std::string& s){
+  if (!config_->find(s)) {
     printf("Config does not specify a port");
-    return 1;
+    return false;
   }
-  
+  return true;
+}
+
+bool Webserver::run_server(const char* file_name){
+
+  if(!this->parse_config(file_name)){
+    return false;
+  }
+  std::string port_str;
+  if(!this->get_port_from_config(port_str)){
+    return false;
+  }
   try {
     boost::asio::io_service io_service;
     Server s(io_service, std::atoi(port_str.c_str()));
@@ -34,9 +34,10 @@ int main(int argc, char* argv[]) {
   } 
   catch (std::exception& e) {
     printf("Exception %s\n", e.what());
+    return false;
   }
-  
-
-  return 0;
+  return true;
 }
+
+
 

@@ -1,5 +1,7 @@
 // An nginx config file parser.
+#ifndef PARSER_H
 
+#define PARSER_H
 #include <iostream>
 #include <memory>
 #include <string>
@@ -20,7 +22,7 @@ class NginxConfig {
  public:
   std::string ToString(int depth = 0);
   std::vector<std::shared_ptr<NginxConfigStatement> > statements_;
-  bool find(std::string& s);
+  virtual bool find(std::string& s);
 };
 
 // The driver that parses a config file and generates an NginxConfig.
@@ -32,7 +34,7 @@ class NginxConfigParser {
   // parsed config in the provided NginxConfig out-param.  Returns true
   // iff the input config file is valid.
   bool Parse(std::istream* config_file, NginxConfig* config);
-  bool Parse(const char* file_name, NginxConfig* config);
+  virtual bool Parse(const char* file_name, NginxConfig* config);
 
  private:
   enum TokenType {
@@ -57,3 +59,4 @@ class NginxConfigParser {
 
   TokenType ParseToken(std::istream* input, std::string* value);
 };
+#endif
