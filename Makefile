@@ -9,7 +9,7 @@ CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST)
 CLASSES=nginx-configparser/config_parser server/server
 GCOV=config_parser.cc server.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
-TESTS=$(CLASSES:=_test)
+TESTS=$(CLASSES:=_test.cc)
 
 .PHONY: all clean test gcov
 all: webserver
@@ -34,7 +34,7 @@ gcov: test
 	for test in $(GCOV); do gcov -r $$test; done
 
 test: $(TESTS) mock_webserver
-	for test in $(TESTS); do ./$$test ; done
+	for test in $(TESTS:%.cc=%); do ./$$test ; done
 	./webserver_test
 
 integration: 
