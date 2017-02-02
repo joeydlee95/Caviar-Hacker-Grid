@@ -33,3 +33,5 @@ test: $(TESTS)
 
 clean:
 	rm -rf *.o nginx-configparser/config_parser $(TESTS) webserver *.dSYM *.a *.gcda *.gcno *.gcov
+	rm -rf nginx-config_parser/*.a nginx-config_parser/*.gcda nginx-config_parser/*.gcno nginx-config_parser/*.gcov
+	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
