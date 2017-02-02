@@ -9,7 +9,7 @@ CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -std=c++11 $(BOOST)
 CLASSES=nginx-configparser/config_parser server/server
 GCOV=config_parser.cc server.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
-TESTS=$(CLASSES:=_test.cc)
+TESTS=$(CLASSES:=_test)
 
 .PHONY: all clean test gcov
 all: webserver
