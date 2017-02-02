@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
   try {
 
     boost::asio::io_service io_service;
-    Server s(io_service, );
+    Server s(io_service, port);
     printf("Running server on port %s...\n", port_str.c_str());
     io_service.run();
   } 
