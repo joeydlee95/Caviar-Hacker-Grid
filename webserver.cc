@@ -20,15 +20,22 @@ int main(int argc, char* argv[]) {
   }
 
 
-  std::string port_str = "";
+  std::string port_str = "port";
   if (!config.find(port_str)) {
     printf("Config does not specify a port");
     return 1;
   }
   
+  int port = std::atoi(port_str.c_str());
+  if(port < 1024 || port > 65535) {
+    printf("Invalid port %d", port);
+    return 1;
+  }
+  
   try {
+
     boost::asio::io_service io_service;
-    Server s(io_service, std::atoi(port_str.c_str()));
+    Server s(io_service, );
     printf("Running server on port %s...\n", port_str.c_str());
     io_service.run();
   } 

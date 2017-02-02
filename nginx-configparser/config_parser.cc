@@ -30,7 +30,7 @@ bool NginxConfig::find(std::string& s) {
   // Finds the first instance of the string. This isn't quite correct, 
   // instead it should find the port in the root level config.
   for(const auto& statement : statements_) {
-    if (statement->tokens_[0].compare(s)) {
+    if (statement->tokens_[0].compare(s) == 0) {
       s = statement->tokens_[1];
       return true;
     }

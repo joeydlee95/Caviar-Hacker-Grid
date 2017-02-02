@@ -22,6 +22,35 @@ protected:
   NginxConfig out_config_;
 };
 
+TEST_F(NginxStringConfigTest, ToString) {
+  ASSERT_TRUE(ParseString("port 8000;")); 
+  EXPECT_EQ(out_config_.ToString(0), "port 8000;\n");
+}
+
+TEST_F(NginxStringConfigTest, EmbeddedToString) {
+  ASSERT_TRUE(ParseString("server { port 8000; }")); 
+  EXPECT_EQ(out_config_.ToString(0), "server {\n  port 8000;\n}\n");
+  EXPECT_EQ(out_config_.ToString(1), "  server {\n    port 8000;\n  }\n");
+}
+
+
+TEST_F(NginxStringConfigTest, findTest) {
+  std::string s = "port";
+  ASSERT_TRUE(ParseString("port 8000;")); 
+  EXPECT_TRUE(out_config_.find(s));
+  EXPECT_EQ(s, "8000");
+
+  EXPECT_FALSE(out_config_.find(s)); 
+}
+
+TEST_F(NginxStringConfigTest, findTestEmbeddedBlock) {
+  std::string s = "port";
+  ASSERT_TRUE(ParseString("server {\nport 8000;\n}")); 
+  EXPECT_FALSE(out_config_.find(s)); 
+}
+
+
+
 TEST_F(NginxStringConfigTest, SimpleConfig) {
   
   EXPECT_TRUE(ParseString("foo bar;")); // note that we can treat the expects as straems
@@ -66,4 +95,12 @@ TEST_F(NginxStringConfigTest, EmbeddedBlockConfig) {
 
 TEST_F(NginxStringConfigTest, EmptyConfig) {
   EXPECT_TRUE(ParseString(""));
+}
+
+TEST_F(NginxStringConfigTest, SimpleCommentConfig) {
+  EXPECT_TRUE(ParseString("# test"));
+}
+
+TEST_F(NginxStringConfigTest, ComplexCommentConfig) {
+  EXPECT_TRUE(ParseString("server\n { server2 \n{ # test \ntestlisten 80;# test \n} \n}"));
 }
