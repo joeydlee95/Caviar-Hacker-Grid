@@ -33,8 +33,15 @@ gcov: GTEST_FLAGS += -fprofile-arcs -ftest-coverage
 gcov: test
 	for test in $(GCOV); do gcov -r $$test; done
 
-test: $(TESTS)
+test: $(TESTS) mock_webserver
 	for test in $(TESTS:%.cc=%); do ./$$test ; done
+	./webserver_test
+
+integration: 
+	python integration_test.py
+
+#test: $(TESTS)
+#for test in $(TESTS:%.cc=%); do ./$$test ; don
 
 libgmock.a:
 	g++ -isystem ${GTEST_DIR}/include -I${GTEST_DIR} -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} -pthread -c ${GTEST_DIR}/src/gtest-all.cc
@@ -44,6 +51,8 @@ libgmock.a:
 mock_webserver: libgmock.a 
 	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) $(UTIL_CLASSES) webserver.cc -pthread webserver_test.cc $(GMOCK_DIR)/src/gmock_main.cc libgmock.a $(BOOST) -o webserver_test
 	./webserver_test
+integration:
+	python integration_test.py
 
 clean:
 	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
