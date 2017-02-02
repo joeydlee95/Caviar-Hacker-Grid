@@ -60,3 +60,4 @@ class NginxConfigParser {
   TokenType ParseToken(std::istream* input, std::string* value);
 };
 #endif
+
