@@ -51,8 +51,6 @@ libgmock.a:
 mock_webserver: libgmock.a 
 	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) $(UTIL_CLASSES) webserver.cc -pthread webserver_test.cc $(GMOCK_DIR)/src/gmock_main.cc libgmock.a $(BOOST) -o webserver_test
 	./webserver_test
-integration:
-	python integration_test.py
 
 clean:
 	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
