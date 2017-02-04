@@ -1,5 +1,5 @@
 #include "http.h"
-#include <stringstream>
+#include <string>
 
 bool http::status_code::set(int code) {
   if(code > 99 && code < 600) {
