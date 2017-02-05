@@ -56,16 +56,16 @@ TEST_F(NginxStringConfigTest, EmbeddedToString) {
 TEST_F(NginxStringConfigTest, findTest) {
   std::string s = "port";
   ASSERT_TRUE(ParseString("port 8000;")); 
-  EXPECT_TRUE(out_config_.find(s));
+  EXPECT_TRUE(out_config_.find("port", s));
   EXPECT_EQ(s, "8000");
 
-  EXPECT_FALSE(out_config_.find(s)); 
+  EXPECT_FALSE(out_config_.find("8000", s)); 
 }
 
 TEST_F(NginxStringConfigTest, findTestEmbeddedBlock) {
   std::string s = "port";
   ASSERT_TRUE(ParseString("server {\nport 8000;\n}")); 
-  EXPECT_FALSE(out_config_.find(s)); 
+  EXPECT_FALSE(out_config_.find("port", s)); 
 }
 
 
@@ -130,3 +130,5 @@ TEST_F(NginxStringConfigTest, SingleQuoteTest) {
   EXPECT_EQ(out_config_.statements_[0]->tokens_[0], "port");
   EXPECT_EQ(out_config_.statements_[0]->tokens_[1], "\'8000\'");
 }
+
+// TODO: ADD A CONFIG TEST WITH DUPLICATE BODIES.
