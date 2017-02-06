@@ -11,7 +11,7 @@ bool HttpRequest::processRequestLine(const std::string request){
 		return false;
 	}
 	std::string request_line = request.substr(0,end_request_ln_idx);
-	this->request_line = request_line;
+	this->request_line_ = request_line;
 
 	char* token = strtok(&request_line[0], " ");
 	std::vector<std::string> request_fields;
@@ -25,9 +25,9 @@ bool HttpRequest::processRequestLine(const std::string request){
 		return false;
 	}
 	
-	this->method = request_fields[0];
-	this->request_uri = request_fields[1];
-	this->version = request_fields[2];
+	this->method_ = request_fields[0];
+	this->request_uri_ = request_fields[1];
+	this->version_ = request_fields[2];
 	
 	return true;
 }
@@ -38,7 +38,7 @@ bool HttpRequest::processMessageBody(const std::string request){
 		printf("Invalid end of request");
 		return false;
 	}
-	this->message_body = request.substr(body_start_inx+4);
+	this->message_body_ = request.substr(body_start_inx+4);
 	return true;
 
 }
@@ -73,7 +73,7 @@ bool HttpRequest::processHeaders(const std::string request){
 			}
 			std::string cur_header = cur_header_line.substr(0,header_value_cut);
 			std::string cur_value = cur_header_line.substr(header_value_cut+1);
-			this->header_fields[cur_header] = cur_value;
+			this->header_fields_[cur_header] = cur_value;
 		}
 	}
 
@@ -82,17 +82,17 @@ bool HttpRequest::processHeaders(const std::string request){
 
 
 std::string HttpRequest::getMethod(){
-	return this->method;
+	return this->method_;
 }
 std::string HttpRequest::getResourcePath(){
-	return this->request_uri;
+	return this->request_uri_;
 }
 std::string HttpRequest::getVersion(){
-	return this->version;
+	return this->version_;
 }
 
 std::string HttpRequest::getMessageBody(){
-	return this->message_body;
+	return this->message_body_;
 }
 
 bool HttpRequest::Parse(const std::string request){
