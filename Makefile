@@ -49,3 +49,9 @@ clean:
 	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
 	rm -rf nginx-configparser/*.a nginx-configparser/*.gcda nginx-configparser/*.gcno nginx-configparser/*.gcov
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
+
+server/httpRequest.cc: server/httpRequest.h
+httpRequest_test: server/httpRequest.cc libgtest.a libgmock.a
+	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread $(GMOCK_DIR)/src/gmock_main.cc server/httpRequest.cc server/httpRequest_test.cc libgmock.a $(BOOST) -o httpRequest_test
+	./httpRequest_test
+
