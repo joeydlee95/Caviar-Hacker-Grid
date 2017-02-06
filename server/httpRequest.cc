@@ -5,7 +5,7 @@
 const std::string HttpRequest::GET = "GET";
 
 bool HttpRequest::processRequestLine(const std::string request){
-	int end_request_ln_idx = request.find("\r\n");
+	std::size_t end_request_ln_idx = request.find("\r\n");
 	if(end_request_ln_idx==std::string::npos){
 		printf("Invalid Request Line CRLF");
 		return false;
