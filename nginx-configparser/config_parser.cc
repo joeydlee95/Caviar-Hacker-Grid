@@ -29,7 +29,6 @@ bool NginxConfig::find(const std::string& key, std::string& value, int depth) {
   // Finds the depth instance of the key from the root level config. 
   // Expects a string to be the second value, and returns that.
   // Returns true if and only if the statement is found. 
-  printf("Didn't enter mock method");
   for(const auto& statement : statements_) {
     if (statement->tokens_[0].compare(key) == 0) {
       if(statement->tokens_.size() > depth) {
@@ -41,23 +40,31 @@ bool NginxConfig::find(const std::string& key, std::string& value, int depth) {
   return false;
 }
 
-// bool NginxConfig::find(const std::string& key, NginxConfig& value) {
-//   // Finds the first instance of the string from the root level config. 
-//   // Expects a config token to be the second value, and returns that.
-//   for(const auto& statement : statements_) {
-//     if (statement->tokens_[0].compare(key) == 0) {
-//       if(statement->child_block_.get() != nullptr) {
-//           value = *statement->child_block_;
-//           return true;
-//       }
-//       else {
-//         return false;
-//       }
-      
-//     }
-//   }
-//   return false;
-// }
+bool NginxConfig::find(const std::string& key, NginxConfig& value) {
+  // Finds the first instance of the string from the root level config. 
+  // Expects a config token to be the second value, and returns that.
+  for(const auto& statement : statements_) {
+    if (statement->tokens_[0].compare(key) == 0) {
+      if(statement->child_block_.get() != nullptr) {
+          value = *statement->child_block_;
+          return true;
+      } else {
+        printf("Error: no sub-config!");
+      }
+    }
+  }
+  return false;
+}
+
+std::vector<std::shared_ptr<NginxConfigStatement> > NginxConfig::findAll(const std::string& key) {
+  std::vector<std::shared_ptr<NginxConfigStatement> > ret_statements;
+  for(const auto statement : statements_) {
+    if (statement.get()->tokens_[0].compare(key) == 0) {
+      ret_statements.emplace_back(statement);
+    }
+  }
+  return ret_statements;
+}
 
 std::string NginxConfigStatement::ToString(int depth) {
   std::string serialized_statement;

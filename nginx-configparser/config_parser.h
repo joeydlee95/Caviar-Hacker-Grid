@@ -24,7 +24,8 @@ class NginxConfig {
   std::vector<std::shared_ptr<NginxConfigStatement> > statements_;
 
   virtual bool find(const std::string& key, std::string& value, int depth = 1);
-  bool find(const std::string& key, NginxConfig& value);
+  virtual bool find(const std::string& key, NginxConfig& value);
+  virtual std::vector<std::shared_ptr<NginxConfigStatement> > findAll(const std::string& key);
 };
 
 // The driver that parses a config file and generates an NginxConfig.
