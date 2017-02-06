@@ -66,11 +66,13 @@ TEST(HttpRequestTest, EmptyHeaderParse) {
 TEST(HttpRequestTest, HeaderParse) { 
   HttpRequest parser;
 
-  std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\nAccept-Languages: en-us\r\nContent-Length: length\r\n\r\n";
+  std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\nAccept-Languages: en-us\r\nAccept-Encoding: gzip, deflate\r\nContent-Length: length\r\n\r\n";
 
   parser.Parse(request);
 
   EXPECT_EQ(parser.header_fields["Content-Length"]," length");
   EXPECT_EQ(parser.header_fields["Accept-Languages"]," en-us");
+  EXPECT_EQ(parser.header_fields["Accept-Encoding"]," gzip, deflate");
+
 }
 

@@ -6,13 +6,20 @@
 class HttpRequest{
 public:
 	bool Parse(const std::string request);
+
+	//get the message body at the end if there is any
 	std::string getMessageBody();
+	
 	std::string getMethod();
 	std::string getResourcePath();
 	std::string getVersion();
-	std::string getField(std::string header);
-
+	
+	//string constants for HTTP request Methods, for now it only has GET
 	static const std::string GET;
+
+	//for example, we have "Accept-Languages: en-us" in the headers
+	//just do header_fields[Accept-Languages]
+	//notice that it will return " en-us" with the space for now
 	std::map<std::string,std::string> header_fields;
 
 private:
