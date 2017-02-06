@@ -42,7 +42,7 @@ gcov: test
 test: $(TESTS)
 	for test in $(TESTS:%.cc=%); do ./$$test ; done
 
-integration: 
+integration: webserver
 	python integration_test.py
 
 clean:
