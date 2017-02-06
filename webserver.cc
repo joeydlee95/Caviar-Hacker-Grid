@@ -11,21 +11,19 @@ bool Webserver::run_server(const char* file_name){
   }
 
 
-  std::string port_str = "port";
-  
-  if (!config_->find(port_str)) {
+  std::string port_str = "";
+  if (!config_->find("port", port_str, 1)) {
     printf("Config does not specify a port");
     return false;
   }
-  
+
   int port = std::atoi(port_str.c_str());
   if(port < 1024 || port > 65535) {
     printf("Invalid port %d", port);
     return 1;
   }
   
-  try {
-
+  try { // this is a terrible idea. NO EXCEPTIONS. 
     boost::asio::io_service io_service;
     Server s(io_service, port);
     printf("Running server on port %s...\n", port_str.c_str());
