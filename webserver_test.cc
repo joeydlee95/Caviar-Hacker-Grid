@@ -20,13 +20,13 @@ public:
 
 class MockNginxConfig: public NginxConfig{
 public:
-  bool find(const std::string& key, std::string& value, int depth = 1) {
+  bool find(const std::string& key, std::string& value, std::size_t depth = 1) {
     return mocked_find(key, value, depth);
   }
   bool find(const std::string& key, NginxConfig& value) {
     return mocked_find(key, value);
   }
-	MOCK_METHOD3(mocked_find,bool(const std::string& key, std::string& value, int depth));  
+	MOCK_METHOD3(mocked_find,bool(const std::string& key, std::string& value, std::size_t depth));  
   MOCK_METHOD2(mocked_find,bool(const std::string& key, NginxConfig& value));
 };
 
@@ -41,7 +41,7 @@ TEST(WebserverTest, ConfigurationFail) {
     .WillOnce( 
       Return(false)
     );
-  EXPECT_CALL(mock_config, mocked_find("port", An<std::string &>(), An<int>())).Times(0);
+  EXPECT_CALL(mock_config, mocked_find("port", An<std::string &>(), An<std::size_t>())).Times(0);
   EXPECT_FALSE(server.run_server(dummy_file.c_str()));
 }
 
@@ -57,7 +57,7 @@ TEST(WebserverTest, FindPortFail) {
     .WillOnce(
       Return(true)
     );
-  EXPECT_CALL(mock_config, mocked_find("port", An<std::string &>(), An<int>()))
+  EXPECT_CALL(mock_config, mocked_find("port", An<std::string &>(), An<std::size_t>()))
     .WillOnce(
   	  Return(false)	
     );

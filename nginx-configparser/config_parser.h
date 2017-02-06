@@ -23,7 +23,7 @@ class NginxConfig {
   std::string ToString(int depth = 0);
   std::vector<std::shared_ptr<NginxConfigStatement> > statements_;
 
-  virtual bool find(const std::string& key, std::string& value, int depth = 1);
+  virtual bool find(const std::string& key, std::string& value, std::size_t depth = 1);
   virtual bool find(const std::string& key, NginxConfig& value);
   virtual std::vector<std::shared_ptr<NginxConfigStatement> > findAll(const std::string& key);
 };

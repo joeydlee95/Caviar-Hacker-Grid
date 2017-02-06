@@ -25,7 +25,7 @@ std::string NginxConfig::ToString(int depth) {
   return serialized_config;
 }
 
-bool NginxConfig::find(const std::string& key, std::string& value, int depth) {
+bool NginxConfig::find(const std::string& key, std::string& value, std::size_t depth) {
   // Finds the depth instance of the key from the root level config. 
   // Expects a string to be the second value, and returns that.
   // Returns true if and only if the statement is found. 
