@@ -62,7 +62,7 @@ TEST_F(NginxStringConfigTest, findTest) {
   ASSERT_TRUE(ParseString("port 8000;")); 
   EXPECT_TRUE(out_config_.find("port", s));
   EXPECT_EQ(s, "8000");
-
+  EXPECT_FALSE(out_config_.find("port", s, 2));
   EXPECT_FALSE(out_config_.find("8000", s)); 
 }
 
@@ -189,7 +189,7 @@ TEST_F(NginxStringConfigTest, RealConfigExample) {
   ASSERT_NE(s1, nullptr);
   ASSERT_EQ(s0->ToString(0), "location /URL {\n  root /path/to/file;\n}\n");
   ASSERT_EQ(s1->ToString(0), "location /echo {\n  echo;\n}\n");
-  
+
   std::string path = "";
   EXPECT_TRUE(s0->child_block_.get()->find("root", path));
   EXPECT_EQ(path, "/path/to/file");
