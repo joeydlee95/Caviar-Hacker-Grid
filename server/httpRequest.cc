@@ -33,7 +33,7 @@ bool HttpRequest::processRequestLine(const std::string request){
 }
 
 bool HttpRequest::processMessageBody(const std::string request){
-	int body_start_inx = request.find("\r\n\r\n");
+	std::size_t body_start_inx = request.find("\r\n\r\n");
 	if(body_start_inx==std::string::npos){
 		printf("Invalid end of request");
 		return false;
@@ -44,8 +44,8 @@ bool HttpRequest::processMessageBody(const std::string request){
 }
 
 bool HttpRequest::processHeaders(const std::string request){
-	int start_idx = request.find("\r\n");
-	int end_idx = request.find("\r\n\r\n");
+	std::size_t start_idx = request.find("\r\n");
+	std::size_t end_idx = request.find("\r\n\r\n");
 	if(start_idx == end_idx){
 		return true;
 	}
@@ -54,7 +54,7 @@ bool HttpRequest::processHeaders(const std::string request){
 		end_idx = end_idx -1;
 		int length = end_idx + 1 - start_idx;
 		std::string headers_str = request.substr(start_idx,length);
-		int cut = 0;
+		std::size_t cut = 0;
 		std::vector<std::string> temp_headers;
 		std::string delimiter = "\r\n";
 
@@ -64,9 +64,9 @@ bool HttpRequest::processHeaders(const std::string request){
 		}
 		temp_headers.push_back(headers_str);
 
-		for(int i = 0; i < temp_headers.size(); i++){
+		for(std::size_t i = 0; i < temp_headers.size(); i++){
 			std::string cur_header_line = temp_headers[i];
-			int header_value_cut = cur_header_line.find(":");
+			std::size_t header_value_cut = cur_header_line.find(":");
 			if(header_value_cut==std::string::npos){
 				printf("Invalid header");
 				return false;
