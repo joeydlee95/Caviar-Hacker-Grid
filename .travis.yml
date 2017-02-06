@@ -1,7 +1,9 @@
 language: cpp
 dist: trusty
 sudo: required
-script: make test  
+script: 
+    - make test  
+    - make integration
 addons:
  apt:
   packages:
