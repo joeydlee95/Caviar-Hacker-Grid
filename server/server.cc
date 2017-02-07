@@ -42,6 +42,12 @@ void Session::do_read() {
           printf("%s\n", request->getMethod().c_str());
           printf("%s\n", request->getResourcePath().c_str());
           for(const auto & option : *options_) {
+          //   if(request->getResourcePath().compare(option.first) == 0) {
+          //     // match
+          //     std::string behavior = option.second.(*options_)[0]
+
+          //     break;
+          //   }
             printf("option: %s, val: %s\n", option.first.c_str(), option.second.ToString().c_str());
           }
         }

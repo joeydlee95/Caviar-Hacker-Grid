@@ -67,7 +67,7 @@ bool Webserver::configure_server(const char* file_name) {
       printf("Invalid config %s", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
       return false;
     }
-    std::vector<std::map<std::string, std::vector<std::string> > >* options = new std::vector<std::map<std::string, std::vector<std::string> > >;
+    std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
     WebserverOptions opt(statement->child_block_, options);
     printf("%s\n", opt.ToString().c_str());
     options_.insert(std::make_pair(statement->tokens_[1], opt));
