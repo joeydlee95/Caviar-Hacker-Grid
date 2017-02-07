@@ -11,7 +11,7 @@
 
 class WebserverOptions {
 public:
-	WebserverOptions(NginxConfigStatement* statement);
+	WebserverOptions(std::unique_ptr<NginxConfig> const &statement);
 	std::vector<std::map<std::string, std::vector<std::string> > > options_;
 	std::string ToString();
 };
@@ -25,7 +25,9 @@ public:
 	virtual boost::system::error_code port_valid();
 	NginxConfigParser* parser_;
 	NginxConfig* config_;
+	
 	std::map<std::string, WebserverOptions> options_;
+
 	int port_;
 
 };

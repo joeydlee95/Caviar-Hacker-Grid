@@ -1,6 +1,7 @@
 #include "webserver.h"
 #include <utility>
 #include <map>
+#include <numeric>
 #include <boost/asio.hpp>
 
 
@@ -13,26 +14,21 @@ std::string WebserverOptions::ToString() {
     //   options_string.append(vals.second);
     //   options_string.append("\n");
     // }
-    printf("option: %s", option.first.c_str());
+    // printf("option: %s", option->first.c_str());
   }
   return options_string;
 }
 
-WebserverOptions::WebserverOptions(NginxConfigStatement* statement) {
-    if(statement->child_block_.get() != nullptr) {
-      for(const auto& s : statement->child_block_.get()->statements_) {
-        options_.insert(
-            std::make_pair(
-                s->tokens_[0], 
-                std::vector<std::string>(
-                        s->tokens_.begin() + 1, 
-                        s->tokens_.end()
-                                        )
-                          )
-        );
+WebserverOptions::WebserverOptions(std::unique_ptr<NginxConfig> const &statement) {
+    if(statement.get() != nullptr) {
+      for(const auto& s : statement->statements_) {
+        std::string key = s->tokens_[0];
+        std::vector<std::string> vals = std::vector<std::string>(s->tokens_.begin() + 1, s->tokens_.end());
+        std::map<std::string, std::vector<std::string> > map;
+        map.insert(std::make_pair(key, vals));
+        options_.push_back(map);
       }
     }
-
 }
 
 
@@ -46,7 +42,7 @@ boost::system::error_code Webserver::port_valid() {
   tcp::acceptor a(svc);
 
   boost::system::error_code ec;
-  a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), (short)port_ }, ec);
+  a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), (unsigned short)port_ }, ec);
 
   return ec;
 }
@@ -75,16 +71,17 @@ bool Webserver::configure_server(const char* file_name) {
   std::vector<std::shared_ptr<NginxConfigStatement> > statements = 
     config_->findAll("location");
 
-  // Note that this currently doesn't validate the input.
-  for(auto& statement: statements) {
-    NginxConfigStatement* st = statement.get();
-    // if(st->tokens_.size() != 2)
-      // printf("Invalid config %s", std::string(st->tokens_.begin(), st->tokens_.end()).c_str());
-      // return false;
-    // }
-    WebserverOptions opt = WebserverOptions(st->child_block_);
-    options_.insert(st->tokens_[1], opt);
+  for (const auto& statement : statements) {
+    printf("%s", statement->ToString(0).c_str());
+    if(statement->tokens_.size() != 2) {
+      // lazy way to stringify the vector of strings
+      printf("Invalid config %s", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
+      return false;
+    }
+    WebserverOptions opt(statement->child_block_);
+    options_.insert(std::make_pair(statement->tokens_[1], opt));
   }
+  return true;
 }
 
 bool Webserver::run_server(const char* file_name) {
