@@ -7,28 +7,30 @@
 
 std::string WebserverOptions::ToString() const{
   std::string options_string;
-  for(auto& option : options_) {
+  for(auto& option : *options_) {
     for(auto& vals : option) {
       options_string.append(vals.first);
       options_string.append(": ");
       for(auto& token : vals.second) {
         options_string.append(token);
+        options_string.append(" ");
       }
       options_string.append("\n");
     }
     
   }
+  // printf("%s", options_string.c_str());
   return options_string;
 }
 
-WebserverOptions::WebserverOptions(std::unique_ptr<NginxConfig> const &statement) {
+WebserverOptions::WebserverOptions(std::unique_ptr<NginxConfig> const &statement, std::vector<std::map<std::string, std::vector<std::string> > >* options) : options_(options) {
     if(statement.get() != nullptr) {
       for(const auto& s : statement->statements_) {
         std::string key = s->tokens_[0];
         std::vector<std::string> vals = std::vector<std::string>(s->tokens_.begin() + 1, s->tokens_.end());
         std::map<std::string, std::vector<std::string> > map;
         map.insert(std::make_pair(key, vals));
-        options_.push_back(map);
+        options_->push_back(map);
       }
     }
 }
@@ -66,7 +68,7 @@ bool Webserver::configure_server(const char* file_name) {
   if (!parser_->Parse(file_name, config_)) {
     printf("Invalid config file");
     return false;
-  }
+  } 
 
   std::string port_str = "";
 
@@ -87,16 +89,17 @@ bool Webserver::configure_server(const char* file_name) {
     config_->findAll("location");
 
   for (const auto& statement : statements) {
-    printf("%s", statement->ToString(0).c_str());
+    // printf("%s", statement->ToString(0).c_str());
     if(statement->tokens_.size() != 2) {
       // lazy way to stringify the vector of strings
       printf("Invalid config %s", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
       return false;
     }
-    WebserverOptions opt(statement->child_block_);
+    std::vector<std::map<std::string, std::vector<std::string> > >* options = new std::vector<std::map<std::string, std::vector<std::string> > >;
+    WebserverOptions opt(statement->child_block_, options);
+    printf("%s\n", opt.ToString().c_str());
     options_.insert(std::make_pair(statement->tokens_[1], opt));
   }
-  printf("%s", ToString().c_str());
   return true;
 }
 

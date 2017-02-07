@@ -11,8 +11,8 @@
 
 class WebserverOptions {
 public:
-	WebserverOptions(std::unique_ptr<NginxConfig> const &statement);
-	std::vector<std::map<std::string, std::vector<std::string> > > options_;
+	WebserverOptions(std::unique_ptr<NginxConfig> const &statement, std::vector<std::map<std::string, std::vector<std::string> > >* options);
+	std::vector<std::map<std::string, std::vector<std::string> > >* options_;
 	std::string ToString() const;
 };
 
