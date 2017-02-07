@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <boost/asio.hpp>
+#include "httpRequest.h"
 using boost::asio::ip::tcp;
 
 
@@ -17,7 +18,6 @@ class Session
 {
 public:
   Session(tcp::socket socket);
-
   void start();
 
 private:

@@ -23,7 +23,6 @@ void Session::start() {
 
 void Session::do_read() {
   auto self(shared_from_this());
-
   //trying to the size of incoming messege
   std::size_t buffer_size;
   //blocks the session until it gets a non-empty incoming string
@@ -37,11 +36,16 @@ void Session::do_read() {
       if (!ec) {
         printf("Incoming Data length %lu:\n", len);
 
-        for (std::size_t i = 0; i < len; i++) {
-            printf("%c", data_[i]);
+        HttpRequest* request = new HttpRequest();
+        if(request->Parse(data_)){
+          // do_write(len);
+          printf("%s\n", request->getMethod().c_str());
+          printf("%s\n", request->getResourcePath().c_str());
         }
-
-        do_write(len);
+        else{
+          printf("Invalid Request: Parse Error");
+        }
+        delete request;
       }
   });
 }
