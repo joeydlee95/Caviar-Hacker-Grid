@@ -103,6 +103,10 @@ std::string HttpRequest::getMessageBody(){
 	return this->message_body_;
 }
 
+std::string HttpRequest::getRawRequest(){
+	return this->raw_request_;
+}
+
 bool HttpRequest::Parse(const std::string request){
 	if(!processRequestLine(request)){
 		return false;
@@ -113,10 +117,18 @@ bool HttpRequest::Parse(const std::string request){
 	if(!processHeaders(request)){
 		return false;
 	}
+	this->raw_request_ = request;
 	return true;
 }
 
-// int main(int argc, char* argv[]) {
-// 	return 0;
-// }
-// 
+void HttpRequest::Clear(){
+	this->raw_request_ = "";
+	this->request_line_ = "";
+	this->message_body_ = "";
+	this->method_ = "";
+	this->version_ = "";
+	this->request_uri_ = "";
+	this->header_fields_.clear();
+
+}
+

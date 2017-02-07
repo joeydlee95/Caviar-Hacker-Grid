@@ -76,3 +76,29 @@ TEST(HttpRequestTest, HeaderParse) {
 
 }
 
+TEST(HttpRequestTest, ParserClear) { 
+  HttpRequest parser;
+
+  std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\nAccept-Languages: en-us\r\nAccept-Encoding: gzip, deflate\r\nContent-Length: length\r\n\r\n";
+
+  parser.Parse(request);
+
+  EXPECT_EQ(parser.header_fields_["Content-Length"],"length");
+  EXPECT_EQ(parser.header_fields_["Accept-Languages"],"en-us");
+
+  parser.Clear();
+  EXPECT_EQ(parser.header_fields_["Accept-Encoding"],"");
+  EXPECT_EQ(parser.getResourcePath(), "");
+  EXPECT_EQ(parser.getMethod(),"");
+
+}
+
+TEST(HttpRequestTest, GetRaw) { 
+  HttpRequest parser;
+
+  std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org";
+
+  bool success = parser.Parse(request);
+
+  EXPECT_EQ(parser.getRawRequest(),"GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org");
+}
