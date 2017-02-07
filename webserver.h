@@ -13,7 +13,7 @@ class WebserverOptions {
 public:
 	WebserverOptions(std::unique_ptr<NginxConfig> const &statement);
 	std::vector<std::map<std::string, std::vector<std::string> > > options_;
-	std::string ToString();
+	std::string ToString() const;
 };
 
 class Webserver {
@@ -23,12 +23,13 @@ public:
 	virtual bool configure_server(const char* file_name);
 	virtual bool run_server(const char* file_name);
 	virtual boost::system::error_code port_valid();
+
+	std::string ToString() const;
+
 	NginxConfigParser* parser_;
 	NginxConfig* config_;
-	
 	std::map<std::string, WebserverOptions> options_;
-
-	int port_;
+	int port_ = 0;
 
 };
 

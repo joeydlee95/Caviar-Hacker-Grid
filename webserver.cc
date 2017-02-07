@@ -5,16 +5,18 @@
 #include <boost/asio.hpp>
 
 
-std::string WebserverOptions::ToString() {
+std::string WebserverOptions::ToString() const{
   std::string options_string;
   for(auto& option : options_) {
-    // for(auto& vals : option.second) {
-    //   options_string.append(vals.first);
-    //   options_string.append(": ");
-    //   options_string.append(vals.second);
-    //   options_string.append("\n");
-    // }
-    // printf("option: %s", option->first.c_str());
+    for(auto& vals : option) {
+      options_string.append(vals.first);
+      options_string.append(": ");
+      for(auto& token : vals.second) {
+        options_string.append(token);
+      }
+      options_string.append("\n");
+    }
+    
   }
   return options_string;
 }
@@ -31,6 +33,19 @@ WebserverOptions::WebserverOptions(std::unique_ptr<NginxConfig> const &statement
     }
 }
 
+
+std::string Webserver::ToString() const{
+  std::string webserver_string;
+  webserver_string.append("port: " + std::to_string(port_) + " \n");
+  for(const auto& option : options_) {
+    webserver_string.append("key: ");
+    webserver_string.append(option.first);
+    webserver_string.append(", value: ");
+    webserver_string.append(option.second.ToString());
+    webserver_string.append("\n");
+  }
+  return webserver_string;
+}
 
 boost::system::error_code Webserver::port_valid() {
   // Based off of: 
@@ -81,6 +96,7 @@ bool Webserver::configure_server(const char* file_name) {
     WebserverOptions opt(statement->child_block_);
     options_.insert(std::make_pair(statement->tokens_[1], opt));
   }
+  printf("%s", ToString().c_str());
   return true;
 }
 
