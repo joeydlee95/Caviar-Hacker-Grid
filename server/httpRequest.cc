@@ -5,6 +5,7 @@
 const std::string HttpRequest::GET = "GET";
 
 bool HttpRequest::processRequestLine(const std::string request){
+	//get the first CRLF which comes right after the request line
 	std::size_t end_request_ln_idx = request.find("\r\n");
 	if(end_request_ln_idx==std::string::npos){
 		printf("Invalid Request Line CRLF");
@@ -13,6 +14,7 @@ bool HttpRequest::processRequestLine(const std::string request){
 	std::string request_line = request.substr(0,end_request_ln_idx);
 	this->request_line_ = request_line;
 
+	//split the request line into tokens and push them onto a temp vector
 	char* token = strtok(&request_line[0], " ");
 	std::vector<std::string> request_fields;
 	while(token!=NULL){
@@ -44,9 +46,12 @@ bool HttpRequest::processMessageBody(const std::string request){
 }
 
 bool HttpRequest::processHeaders(const std::string request){
+	//the CRLF at the end of the request line
 	std::size_t start_idx = request.find("\r\n");
+	//the CRLFs preceding the start of the optional message body 
 	std::size_t end_idx = request.find("\r\n\r\n");
 	if(start_idx == end_idx){
+		//if there is no header at all
 		return true;
 	}
 	else{
@@ -58,12 +63,14 @@ bool HttpRequest::processHeaders(const std::string request){
 		std::vector<std::string> temp_headers;
 		std::string delimiter = "\r\n";
 
+		//put each line in the header_string into a temp vector
 		while ((cut = headers_str.find(delimiter)) != std::string::npos) {
 		    temp_headers.push_back(headers_str.substr(0, cut));
 		    headers_str.erase(0, cut + delimiter.length());
 		}
 		temp_headers.push_back(headers_str);
 
+		//for each line of header: value, put it mapping into the map
 		for(std::size_t i = 0; i < temp_headers.size(); i++){
 			std::string cur_header_line = temp_headers[i];
 			std::size_t header_value_cut = cur_header_line.find(":");
@@ -72,7 +79,8 @@ bool HttpRequest::processHeaders(const std::string request){
 				return false;
 			}
 			std::string cur_header = cur_header_line.substr(0,header_value_cut);
-			std::string cur_value = cur_header_line.substr(header_value_cut+1);
+			//header_value_cut+2 because there is a white space right after the ':''
+			std::string cur_value = cur_header_line.substr(header_value_cut+2);
 			this->header_fields_[cur_header] = cur_value;
 		}
 	}

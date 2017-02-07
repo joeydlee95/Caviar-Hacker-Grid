@@ -5,6 +5,7 @@
 #include <map>
 class HttpRequest{
 public:
+	//should call this method before calling other member functions
 	bool Parse(const std::string request);
 
 	std::string getMessageBody();	
@@ -17,7 +18,7 @@ public:
 
 	//for example, we have "Accept-Languages: en-us" in the headers
 	//just do header_fields[Accept-Languages]
-	//notice that it will return " en-us" with the space for now
+	//notice that it will return "en-us"
 	std::map<std::string,std::string> header_fields_;
 	bool processRequestLine(const std::string request);
 	bool processMessageBody(const std::string request);

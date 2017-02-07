@@ -70,9 +70,9 @@ TEST(HttpRequestTest, HeaderParse) {
 
   parser.Parse(request);
 
-  EXPECT_EQ(parser.header_fields_["Content-Length"]," length");
-  EXPECT_EQ(parser.header_fields_["Accept-Languages"]," en-us");
-  EXPECT_EQ(parser.header_fields_["Accept-Encoding"]," gzip, deflate");
+  EXPECT_EQ(parser.header_fields_["Content-Length"],"length");
+  EXPECT_EQ(parser.header_fields_["Accept-Languages"],"en-us");
+  EXPECT_EQ(parser.header_fields_["Accept-Encoding"],"gzip, deflate");
 
 }
 
