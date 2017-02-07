@@ -46,6 +46,7 @@ bool NginxConfig::find(const std::string& key, NginxConfig& value) {
   for(const auto& statement : statements_) {
     if (statement->tokens_[0].compare(key) == 0) {
       if(statement->child_block_.get() != nullptr) {
+        // This should be a unique pointer.. Look into fixing this later.
           value = *statement->child_block_;
           return true;
       } else {
