@@ -7,14 +7,14 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-
+#include "../webserver.h"
 #include <vector>
 #include "server.h"
 
 using boost::asio::ip::tcp;
 
-Session::Session(tcp::socket socket)
-  : socket_(std::move(socket)) {
+Session::Session(tcp::socket socket, std::map<std::string, WebserverOptions>* options)
+  : socket_(std::move(socket)), options_(options) {
 }
 
 void Session::start() {
@@ -41,6 +41,9 @@ void Session::do_read() {
           // do_write(len);
           printf("%s\n", request->getMethod().c_str());
           printf("%s\n", request->getResourcePath().c_str());
+          for(const auto & option : *options_) {
+            printf("option: %s, val: %s\n", option.first.c_str(), option.second.ToString().c_str());
+          }
         }
         else{
           printf("Invalid Request: Parse Error");
@@ -70,20 +73,20 @@ void Session::do_write(std::size_t length) {
 
 
 
-Server::Server(boost::asio::io_service& io_service, int port)
+Server::Server(boost::asio::io_service& io_service, int port, std::map<std::string, WebserverOptions>* options)
   : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
   socket_(io_service) {
-  do_accept();
+  do_accept(options);
 }
 
-void Server::do_accept()
+void Server::do_accept(std::map<std::string, WebserverOptions>* options)
 {
   acceptor_.async_accept(socket_,
-  [this](boost::system::error_code ec) {
+  [this, options](boost::system::error_code ec) {
     if (!ec) {
-        std::make_shared<Session>(std::move(socket_))->start();
+        std::make_shared<Session>(std::move(socket_), options)->start();
     }
 
-    do_accept();
+    do_accept(options);
   });
 }

@@ -4,17 +4,12 @@
 
 #include "nginx-configparser/config_parser.h"
 #include "server/server.h"
+#include "webserver_options.h"
 #include <cstdlib>
 #include <string>
 #include <map>
 
 
-class WebserverOptions {
-public:
-	WebserverOptions(std::unique_ptr<NginxConfig> const &statement, std::vector<std::map<std::string, std::vector<std::string> > >* options);
-	std::vector<std::map<std::string, std::vector<std::string> > >* options_;
-	std::string ToString() const;
-};
 
 class Webserver {
 public:
