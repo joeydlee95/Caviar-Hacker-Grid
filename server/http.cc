@@ -1,5 +1,6 @@
 #include "http.h"
 #include <string>
+#include <locale>
 #include <boost/asio.hpp>
 
 bool http::status_code::set(int code) {
@@ -279,6 +280,96 @@ std::string http::mime_type::ContentTypeAsString(ContentType type) {
     default:
       return "application/octet-stream";
   }
+}
+
+http::mime_type::ContentType http::mime_type::GetMimeType(std::string extension) {
+  // Turn this into a switch statement with hashing macros
+  // https://dev.krzaq.cc/post/switch-on-strings-with-c11/
+
+  // this should probably be a map.
+  std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+  if(extension.compare("txt") == 0) {
+    return http::mime_type::CONTENT_TYPE_TEXT_PLAIN;
+  }
+  else if(extension.compare("sh") == 0) {
+    return http::mime_type::CONTENT_TYPE_TEXT_PLAIN;
+  }
+  else if(extension.compare("cc") == 0) {
+    return http::mime_type::CONTENT_TYPE_TEXT_PLAIN;
+  }
+  else if(extension.compare("h") == 0) {
+    return http::mime_type::CONTENT_TYPE_TEXT_PLAIN;
+  }
+  else if(extension.compare("html") == 0) {
+    return http::mime_type::CONTENT_TYPE_TEXT_HTML;
+  }
+  else if(extension.compare("js") == 0) {
+    return http::mime_type::CONTENT_TYPE_TEXT_JS;
+  }
+  else if(extension.compare("css") == 0) {
+    return http::mime_type::CONTENT_TYPE_TEXT_CSS;
+  }
+  else if(extension.compare("jpg") == 0) {
+    return http::mime_type::CONTENT_TYPE_IMAGE_JPEG;
+  }
+  else if(extension.compare("jpeg") == 0) {
+    return http::mime_type::CONTENT_TYPE_IMAGE_JPEG;
+  }
+  else if(extension.compare("png") == 0) {
+    return http::mime_type::CONTENT_TYPE_IMAGE_PNG;
+  }
+  else if(extension.compare("gif") == 0) {
+    return http::mime_type::CONTENT_TYPE_IMAGE_GIF;
+  }
+  else if(extension.compare("svg") == 0) {
+    return http::mime_type::CONTENT_TYPE_IMAGE_SVG_XML;
+  }
+  else if(extension.compare("webp") == 0) {
+    return http::mime_type::CONTENT_TYPE_IMAGE_WEBP;
+  }
+  else if(extension.compare("mpeg") == 0) {
+    return http::mime_type::CONTENT_TYPE_AUDIO_MPEG;
+  }
+  else if(extension.compare("mp3") == 0) {
+    return http::mime_type::CONTENT_TYPE_AUDIO_MPEG;
+  }
+  else if(extension.compare("ogg") == 0) {
+    return http::mime_type::CONTENT_TYPE_AUDIO_OGG;
+  }
+  else if(extension.compare("midi") == 0) {
+    return http::mime_type::CONTENT_TYPE_AUDIO_MIDI;
+  }
+  else if(extension.compare("wav") == 0) {
+    return http::mime_type::CONTENT_TYPE_AUDIO_WAV;
+  }
+  else if(extension.compare("mp4") == 0) {
+    return http::mime_type::CONTENT_TYPE_VIDEO_MP4;
+  }
+  else if(extension.compare("webm") == 0) {
+    return http::mime_type::CONTENT_TYPE_VIDEO_WEBM;
+  }
+  else if(extension.compare("ppt") == 0) {
+    return http::mime_type::CONTENT_TYPE_APP_VND_mspowerpoint;
+  }
+  else if(extension.compare("pptx") == 0) {
+    return http::mime_type::CONTENT_TYPE_APP_VND_mspowerpoint;
+  }
+  else if(extension.compare("p12") == 0) {
+    return http::mime_type::CONTENT_TYPE_APP_PKCS12;
+  }
+  else if(extension.compare("pfx") == 0) {
+    return http::mime_type::CONTENT_TYPE_APP_PKCS12;
+  }
+  else if(extension.compare("xhtml") == 0) {
+    return http::mime_type::CONTENT_TYPE_APP_XHTML_XML;
+  }
+  else if(extension.compare("xml") == 0) {
+    return http::mime_type::CONTENT_TYPE_APP_XML;
+  }
+  else if(extension.compare("pdf") == 0) {
+    return http::mime_type::CONTENT_TYPE_APP_PDF;
+  }
+  return http::mime_type::CONTENT_TYPE_APP_OCTET_STREAM;
 }
 
 http::HTTPResponse::HTTPResponse() {

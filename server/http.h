@@ -61,6 +61,7 @@ namespace http {
       };
 
       static std::string ContentTypeAsString(ContentType type);
+      static http::mime_type::ContentType GetMimeType(std::string extension);
   };
 
   struct http_field {
