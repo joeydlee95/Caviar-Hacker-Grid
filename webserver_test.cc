@@ -66,13 +66,11 @@ TEST(WebserverTest, FindPortFail) {
 
 TEST(WebserverOptionsTest, ToStringTest) {
   std::unique_ptr<NginxConfig> conf(new MockNginxConfig);
-  std::vector<std::map<std::string, std::vector<std::string> > >* options = new std::vector<std::map<std::string, std::vector<std::string> > >;
+  std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
   std::vector<std::string> to_insert;
   to_insert.push_back("is");
   to_insert.push_back("tasty");
-  std::map<std::string, std::vector<std::string> > s;
-  s.insert(std::make_pair("cheese", to_insert));
-  options->emplace_back(s);
+  options->insert(std::make_pair("cheese", to_insert));
   WebserverOptions opt(conf, options);
   EXPECT_EQ(opt.ToString(), "cheese: is tasty \n");
 }

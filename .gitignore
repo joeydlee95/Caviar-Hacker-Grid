@@ -132,6 +132,7 @@ server_test
 webserver
 webserver_test
 httpRequest_test
+webserver_options_test
 
 # gcc coverage testing tool files
 
