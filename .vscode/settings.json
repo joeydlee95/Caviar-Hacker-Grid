@@ -23,6 +23,13 @@
         "hashtable": "cpp",
         "string": "cpp",
         "*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*hfunctional": "cpp",
-        "*h*h*h*h*h*h*h*h*h*harray": "cpp"
+        "*h*h*h*h*h*h*h*h*h*harray": "cpp",
+        "*hstring": "cpp",
+        "*h*cc*h*hdeque": "cpp",
+        "deque": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*h*harray": "cpp",
+        "*h*cc*h*hhashtable": "cpp"
     }
 }

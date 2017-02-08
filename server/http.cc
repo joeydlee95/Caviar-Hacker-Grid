@@ -11,6 +11,10 @@ bool http::status_code::set(int code) {
 }
 
 void http::reason_phrase::setDefault(int code) {
+  reason_phrase_ = getDefault(code);
+}
+std::string http::reason_phrase::getDefault(int code) {
+
   // These are defined http://www.ietf.org/assignments/http-status-codes/http-status-codes.xml
   // This *should* work fine for HTTP/1.0, as they follow the following rules (without particulars):
   // 1xx: Informational - Not used, but reserved for future use
@@ -21,187 +25,187 @@ void http::reason_phrase::setDefault(int code) {
 
   switch(code) {
     case 100: 
-      reason_phrase_ = "Continue";
+      return "Continue";
       break;
     case 101:
-      reason_phrase_ = "Switching Protocols";
+      return "Switching Protocols";
       break;
     case 102:
-      reason_phrase_ = "Processing";
+      return "Processing";
       break;
 
     case 200:
-      reason_phrase_ = "OK";
+      return "OK";
       break;
     case 201:
-      reason_phrase_ = "Created";
+      return "Created";
       break;
     case 202:
-      reason_phrase_ = "Accepted";
+      return "Accepted";
       break;
     case 203:
-      reason_phrase_ = "Non-Authoritative Information";
+      return "Non-Authoritative Information";
       break;
     case 204:
-      reason_phrase_ = "No Content";
+      return "No Content";
       break;
     case 205:
-      reason_phrase_ = "Reset Content";
+      return "Reset Content";
       break;
     case 206:
-      reason_phrase_ = "Partial Content";
+      return "Partial Content";
       break;
     case 207:
-      reason_phrase_ = "Multi-Status";
+      return "Multi-Status";
       break;
     case 208:
-      reason_phrase_ = "Already Reported";
+      return "Already Reported";
       break;
     case 226: 
-      reason_phrase_ = "IM Used";
+      return "IM Used";
 
     case 300:
-      reason_phrase_ = "Multiple Choices";
+      return "Multiple Choices";
       break;
     case 301:
-      reason_phrase_ = "Moved Permanently";
+      return "Moved Permanently";
       break;
     case 302:
-      reason_phrase_ = "Found";
+      return "Found";
       break;
     case 303:
-      reason_phrase_ = "See Other";
+      return "See Other";
       break;
     case 304:
-      reason_phrase_ = "Not Modified";
+      return "Not Modified";
       break;
     case 305:
-      reason_phrase_ = "Use Proxy";
+      return "Use Proxy";
       break;
     case 307:
-      reason_phrase_ = "Temporary Redirect";
+      return "Temporary Redirect";
       break;
     case 308:
-      reason_phrase_ = "Permanent Redirect";
+      return "Permanent Redirect";
       break;
 
     case 400:
-      reason_phrase_ = "Bad Request";
+      return "Bad Request";
       break;
     case 401:
-      reason_phrase_ = "Unauthorized";
+      return "Unauthorized";
       break;
     case 402:
-      reason_phrase_ = "Payment Required";
+      return "Payment Required";
       break;
     case 403:
-      reason_phrase_ = "Forbidden";
+      return "Forbidden";
       break;
     case 404:
-      reason_phrase_ = "Not Found";
+      return "Not Found";
       break;
     case 405:
-      reason_phrase_ = "Method Not Allowed";
+      return "Method Not Allowed";
       break;
     case 406:
-      reason_phrase_ = "Not Acceptable";
+      return "Not Acceptable";
       break;
     case 407:
-      reason_phrase_ = "Proxy Authentication Required";
+      return "Proxy Authentication Required";
       break;
     case 408:
-      reason_phrase_ = "Request Time-out";
+      return "Request Time-out";
       break;
     case 409:
-      reason_phrase_ = "Conflict";
+      return "Conflict";
       break;
     case 410:
-      reason_phrase_ = "Gone";
+      return "Gone";
       break;
     case 411:
-      reason_phrase_ = "Length Required";
+      return "Length Required";
       break;
     case 412:
-      reason_phrase_ = "Precondition Failed";
+      return "Precondition Failed";
       break;
     case 413:
-      reason_phrase_ = "Payload Too Large";
+      return "Payload Too Large";
       break;
     case 414:
-      reason_phrase_ = "URI Too Large";
+      return "URI Too Large";
       break;
     case 415:
-      reason_phrase_ = "Unsupported Media Type";
+      return "Unsupported Media Type";
       break;
     case 416:
-      reason_phrase_ = "Range not satisfiable";
+      return "Range not satisfiable";
       break;
     case 417:
-      reason_phrase_ = "Expectation Failed";
+      return "Expectation Failed";
       break;
     case 421:
-      reason_phrase_ = "Misdirected Request";
+      return "Misdirected Request";
       break;
     case 422:
-      reason_phrase_ = "Unprocessable Entity";
+      return "Unprocessable Entity";
       break;
     case 423:
-      reason_phrase_ = "Locked";
+      return "Locked";
       break;
     case 424:
-      reason_phrase_ = "Failed Dependency";
+      return "Failed Dependency";
       break;
     case 426:
-      reason_phrase_ = "Upgrade Required";
+      return "Upgrade Required";
       break;    
     case 428:
-      reason_phrase_ = "Precondition Required";
+      return "Precondition Required";
       break;
     case 429:
-      reason_phrase_ = "Too Many Requests";
+      return "Too Many Requests";
       break;
     case 431:
-      reason_phrase_ = "Request Header Fields Too Large";
+      return "Request Header Fields Too Large";
       break;
     case 451:
-      reason_phrase_ = "Unavailable For Legal Reasons";
+      return "Unavailable For Legal Reasons";
       break;
 
     case 500:
-      reason_phrase_ = "Internal Server Error";
+      return "Internal Server Error";
       break;
     case 501:
-      reason_phrase_ = "Not Implemented";
+      return "Not Implemented";
       break;
     case 502:
-      reason_phrase_ = "Bad Gateway";
+      return "Bad Gateway";
       break;
     case 503:
-      reason_phrase_ = "Service Unavailable";
+      return "Service Unavailable";
       break;
     case 504:
-      reason_phrase_ = "Gateway Timeout";
+      return "Gateway Timeout";
       break;
     case 505:
-      reason_phrase_ = "HTTP Version not supported";
+      return "HTTP Version not supported";
       break;
     case 506:
-      reason_phrase_ = "Variant Also Negotiates";
+      return "Variant Also Negotiates";
       break;
     case 507:
-      reason_phrase_ = "Insufficient Storage";
+      return "Insufficient Storage";
       break;
     case 508:
-      reason_phrase_ = "Loop Detected";
+      return "Loop Detected";
       break;
     case 510:
-      reason_phrase_ = "Not Extended";
+      return "Not Extended";
       break;
     case 511:
-      reason_phrase_ = "Network Authentication Required";
+      return "Network Authentication Required";
       break;
     default:
-      reason_phrase_ = "Unassigned";
+      return "Unassigned";
       break;
 
   }

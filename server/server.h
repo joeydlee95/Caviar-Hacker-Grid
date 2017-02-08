@@ -12,6 +12,7 @@
 #include "httpRequest.h"
 #include <map>
 #include "../webserver_options.h"
+#include "http.h"
 
 using boost::asio::ip::tcp;
 
@@ -26,12 +27,13 @@ public:
 private:
   void do_read();
 
-  void do_write(std::size_t length);
+  void do_write(http::HTTPResponseBuilder* builder);
 
   tcp::socket socket_;
   enum { max_length = 1024 };
   std::string data_;
   std::map<std::string, WebserverOptions>* options_;
+  http::HTTPResponseBuilder* builder;
 };
 
 class Server 

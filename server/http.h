@@ -18,6 +18,7 @@ namespace http {
   class reason_phrase {
     public:
       void setDefault(int code);
+      static std::string getDefault(int code);
       std::string reason_phrase_;
   };
 

@@ -6,7 +6,7 @@
 namespace http {
   class HTTPResponseBuilderFile : public http::HTTPResponseBuilder {
   public:
-    HTTPResponseBuilderFile(HTTPResponse* res, std::string buf);
+    HTTPResponseBuilderFile(HTTPResponse* res, std::string file_directory);
   };
 }
 
