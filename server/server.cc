@@ -73,8 +73,9 @@ void Session::do_read() {
                 printf("echoing: \n%s\n", builder->getResult()->ToString().c_str());
               }
               else if((i = option.second.options_->find("root")) != option.second.options_->end()) {
-                printf("you should serve files from %s!\n", std::accumulate(i->second.begin(), i->second.end(), std::string("")).c_str());
-                builder = new http::HTTPResponseBuilderFile(new http::HTTPResponse(), data_);
+                std::string tail = resource_path.substr(option.first.size());
+                printf("you should serve files from %s\n", (std::accumulate(i->second.begin(), i->second.end(), std::string(""))+tail).c_str());
+                builder = new http::HTTPResponseBuilderFile(new http::HTTPResponse(), tail);
               }
               else {
                 // invalid config
