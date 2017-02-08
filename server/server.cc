@@ -12,6 +12,7 @@
 #include <boost/asio.hpp>
 #include "../webserver.h"
 #include "server.h"
+#include "http.h"
 
 using boost::asio::ip::tcp;
 

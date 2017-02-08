@@ -1,5 +1,6 @@
 #include "http.h"
 #include <string>
+#include <boost/asio.hpp>
 
 bool http::status_code::set(int code) {
   if(code > 99 && code < 600) {
@@ -162,7 +163,7 @@ void http::reason_phrase::setDefault(int code) {
     case 431:
       reason_phrase_ = "Request Header Fields Too Large";
       break;
-    case 431:
+    case 451:
       reason_phrase_ = "Unavailable For Legal Reasons";
       break;
 
@@ -196,7 +197,7 @@ void http::reason_phrase::setDefault(int code) {
     case 510:
       reason_phrase_ = "Not Extended";
       break;
-    case 508:
+    case 511:
       reason_phrase_ = "Network Authentication Required";
       break;
     default:
@@ -206,54 +207,132 @@ void http::reason_phrase::setDefault(int code) {
   }
 }
 
-std::ostream* http::HTTPResponse::to_stream() {
-  std::ostream os;
+std::string http::mime_type::ContentTypeAsString(ContentType type) const {
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+  // http://www.iana.org/assignments/media-types/media-types.xhtml#imag
+  switch(type) {
+    case CONTENT_TYPE_TEXT_PLAIN:
+      return "text/plain";
+    case CONTENT_TYPE_TEXT_HTML:
+      return "text/html";
+    case CONTENT_TYPE_TEXT_CSS:
+      return "text/css";
+    case CONTENT_TYPE_TEXT_JS:
+      return "text/javascript";
+    case CONTENT_TYPE_TEXT_WC:
+      return "text/*";
+
+    case CONTENT_TYPE_IMAGE_JPEG:
+      return "image/jpeg";
+    case CONTENT_TYPE_IMAGE_PNG:
+      return "image/png";
+    case CONTENT_TYPE_IMAGE_GIF:
+      return "image/gif";
+    case CONTENT_TYPE_IMAGE_SVG_XML:
+      return "image/svg+xml";
+    case CONTENT_TYPE_IMAGE_BMP:
+      return "image/bmp";
+    case CONTENT_TYPE_IMAGE_WEBP:
+      return "image/webp";
+    case CONTENT_TYPE_IMAGE_WC:
+      return "image/*";
+
+    case CONTENT_TYPE_AUDIO_MPEG:
+      return "audio/mpeg";
+    case CONTENT_TYPE_AUDIO_OGG:
+      return "audio/ogg";
+    case CONTENT_TYPE_AUDIO_WEBM:
+      return "audio/webm";
+    case CONTENT_TYPE_AUDIO_MIDI:
+      return "audio/midi";
+    case CONTENT_TYPE_AUDIO_WAV:
+      return "audio/wav";
+    case CONTENT_TYPE_AUDIO_WC:
+      return "audio/*";
+
+    case CONTENT_TYPE_VIDEO_MP4:
+      return "video/mp4";
+    case CONTENT_TYPE_VIDEO_WEBM:
+      return "video/webm";
+    case CONTENT_TYPE_VIDEO_OGG:
+      return "video/ogg";
+    case CONTENT_TYPE_VIDEO_WC:
+      return "video/*";
+
+    case CONTENT_TYPE_APP_PKCS12:
+      return "application/pkcs12";
+    case CONTENT_TYPE_APP_VND_mspowerpoint:
+      return "application/vnd.mspowerpoint";
+    case CONTENT_TYPE_APP_XHTML_XML:
+      return "application/xhtml+xml";
+    case CONTENT_TYPE_APP_XML:
+      return "application/xml";
+    case CONTENT_TYPE_APP_PDF:
+      return "application/pdf";
+
+    // Default for unspecified data types is binary octet stream
+    case CONTENT_TYPE_APP_OCTET_STREAM:
+    default:
+      return "application/octet-stream";
+  }
+}
+
+
+void http::HTTPResponse::to_stream() {
   // TODO: Make these overload the '<<' operator instead.
-  os << status_code_.status_code_;
-  os << reason_phrase_.reason_phrase_;
-  os << http_version_;
-  os << "\r\n";
-  os << http_headers;
-  os << "\r\n\r\n";
-  os << body_.rdbuf();
-  return os;
+  os_ << http_version_;
+  os_ << status_code_.status_code_;
+  os_ << reason_phrase_.reason_phrase_;
+  
+  os_ << line_break;
+
+  for(const auto & header : http_headers_) {
+    os_ << header.first;
+    os_ << header.second;
+    os_ << line_break;
+  }
+
+  os_ << line_break;
+  os_ << line_break;
+  os_ << body_.rdbuf();
 }
 
-const status_code& http::HTTPResponseBuilder::status_code() const {
-  return response_.status_code_;
+const http::status_code& http::HTTPResponseBuilder::status_code() const {
+  return response_->status_code_;
 }
 
-bool http::HTTPResponseBuilder::set_status_code(int code) const {
-  return response_.status_code_.set(code);
+bool http::HTTPResponseBuilder::set_status_code(int code) {
+  return response_->status_code_.set(code);
 }
 
-const reason_phrase& http::HTTPResponseBuilder::reason_phrase() const {
-  return response_.reason_phrase_;
+const http::reason_phrase& http::HTTPResponseBuilder::reason_phrase() const {
+  return response_->reason_phrase_;
 }
 
-void http::HTTPResponseBuilder::set_reason_phrase(std::string phrase) const {
-  reason_phrase_.reason_phrase_ = phrase;
+void http::HTTPResponseBuilder::set_reason_phrase(std::string phrase) {
+  response->reason_phrase_.reason_phrase_ = phrase;
 }
 
-http_headers& http::HTTPResponseBuilder::headers() {
-  return response_.http_headers_;
+http::http_headers& http::HTTPResponseBuilder::headers() {
+  return response_->http_headers_;
 }
 
-const http_headers& http::HTTPResponseBuilder::headers() const {
-  return response_.http_headers_;
+const http::http_headers& http::HTTPResponseBuilder::headers() const {
+  return response_->http_headers_;
 }
+
 // R-value. See: http://stackoverflow.com/questions/4549151/c-double-address-operator
 void http::HTTPResponseBuilder::set_body(std::string &&body_text) {
-  response_.body_ = std::move(std::istringstream is(body_text));
+  response_->body_ << std::move(std::istringstream is(body_text));
   set_content_type(CONTEXT_TYPE_TEXT_PLAIN);
 }
 
 void http::HTTPResponseBuilder::set_body(const std::string &body_text) {
-  response_.body_ = std::move(std::istringstream is(body_text));
+  response_->body_ = std::move(std::istringstream is(body_text));
   set_content_type(CONTEXT_TYPE_TEXT_PLAIN);
 }
 void http::HTTPResponseBuilder::set_body(std::vector<unsigned char> &&body_data) {
-  response_.body_ = std::move(std::istringstream is(body_text));
+  response_->body_ = std::move(std::istringstream is(body_text));
   set_content_type(CONTEXT_TYPE_TEXT_PLAIN);
 }
 void http::HTTPResponseBuilder::set_body(const std::vector<unsigned char> &body_data) {

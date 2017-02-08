@@ -9,20 +9,6 @@
 
 namespace http {
 
-  class HTTPRequest {
-    public:
-  };
-
-  class HTTPRequestLexer {
-    public:
-  };
-
-  class HTTPRequestParser {
-    public: 
-      bool Parse(std::string, HTTPRequest* request);
-  };
-
-
   class status_code {
     public:
       bool set(int code);
@@ -33,34 +19,10 @@ namespace http {
     public:
       void setDefault(int code);
       std::string reason_phrase_;
-  }
-
-  struct http_field {
-    public:
-      std::string field_name;
-      std::string field_value;
   };
 
-  class http_headers {
+  class mime_type {
     public:
-      std::map<std::string, std::string> fields;
-  };
-
-  class HTTPResponse {
-    public:
-      std::ostream* to_stream();
-      reason_phrase reason_phrase_;
-      status_code status_code_;
-      http_headers http_headers_;
-      std::istream body_;
-    private:
-      HTTPResponse();
-  };
-
-
-  class HTTPResponseBuilder {
-    // https://microsoft.github.io/cpprestsdk/classweb_1_1http_1_1http__response.html#a1272e1a1e855c1433abd31a76ef3be97
-    public: 
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
       enum ContentType {
         CONTENT_TYPE_TEXT_PLAIN = 0, /* Default for unknown text documents */
@@ -95,18 +57,62 @@ namespace http {
         CONTENT_TYPE_APP_XHTML_XML,
         CONTENT_TYPE_APP_XML,
         CONTENT_TYPE_APP_PDF,
-
-        
       };
 
+      std::string ContentTypeAsString(ContentType type) const;
+  };
+
+  struct http_field {
+    public:
+      std::string field_name;
+      std::string field_value;
+  };
+
+
+  class http_headers {
+    public:
+      std::map<std::string, std::string> fields;
+  };
+
+  class HTTPResponse {
+    public:
+      HTTPResponse();
+      void to_stream();
+
+      reason_phrase reason_phrase_;
+      status_code status_code_;
+      mime_type mime_type_;
+      http_headers http_headers_;
+      std::istream body_;
+      std::string http_version_;
+
+      boost::asio::streambuf os_;
+      
+      const char* line_break = "\r\n";
+      
+  };
+
+
+  class HTTPResponseBuilder {
+    // API based off of: 
+    // https://microsoft.github.io/cpprestsdk/classweb_1_1http_1_1http__response.html#a1272e1a1e855c1433abd31a76ef3be97
+    public:       
+      HTTPResponseBuilder(HTTPResponse* res);
+
       const status_code& status_code() const;
-      bool set_status_code(int code) const;
+      bool set_status_code(int code);
 
       const reason_phrase& reason_phrase() const;
-      void set_reason_phrase(std::string phrase) const;
+      void set_reason_phrase(std::string phrase);
 
       http_headers& headers();
       const http_headers& headers() const;
+
+      void set_length(std::size_t length);
+      void set_content_type(mime_type::ContentType type);
+      // Used to set arbitrary headers.
+      void set_header(http_field fields);
+      void set_headers(std::vector<http_field> fields);
 
       // TODO: add UTF16 support, via Boost-Locale (?)
 
@@ -123,11 +129,7 @@ namespace http {
       // If the content-type header is not yet set, it will set it to 
       void set_body(std::istream &stream, std::size_t content_length);
 
-      void set_length(std::size_t length);
-      void set_content_type(ContentType type);
-      // Used to set arbitrary headers.
-      void set_header(http_field fields);
-      void set_headers(std::vector<http_field> fields);
+      
       // Returns a stream representing the request data.
       // Note that calling this function ensures that none of the previous functions can be called
       HTTPResponse* getResult() {
@@ -136,7 +138,6 @@ namespace http {
       
     private:
       HTTPResponse* response_;   
-
   };
 }
 
