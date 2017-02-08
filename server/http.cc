@@ -277,17 +277,20 @@ std::string http::mime_type::ContentTypeAsString(ContentType type) {
   }
 }
 
+http::HTTPResponse::HTTPResponse() {
+
+}
 
 std::string http::HTTPResponse::ToString() {
   std::string serialized_resp;
   serialized_resp.append(http_version_ + " " + std::to_string(status_code_.status_code_) + " " + reason_phrase_.reason_phrase_);
-  serialized_resp.append(line_break);
+  
   
   for(const auto & header : http_headers_.fields_) {
+    serialized_resp.append(line_break);
     serialized_resp.append(header.first);
     serialized_resp.append(": ");
     serialized_resp.append(header.second);
-    serialized_resp.append(line_break);
   }
 
   serialized_resp.append(line_break);
@@ -301,7 +304,13 @@ const http::status_code& http::HTTPResponseBuilder::status_code() const {
 }
 
 bool http::HTTPResponseBuilder::set_status_code(int code) {
-  return response_->status_code_.set(code);
+  if(response_->status_code_.set(code)) {
+    if(response_->reason_phrase_.reason_phrase_.compare("") == 0) {//No reason phrase set yet.
+    response_->reason_phrase_.setDefault(code);
+    }
+    return true;
+  }
+  return false;
 }
 
 const http::reason_phrase& http::HTTPResponseBuilder::reason_phrase() const {

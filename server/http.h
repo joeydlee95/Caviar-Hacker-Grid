@@ -97,7 +97,9 @@ namespace http {
     // API based off of: 
     // https://microsoft.github.io/cpprestsdk/classweb_1_1http_1_1http__response.html#a1272e1a1e855c1433abd31a76ef3be97
     public:       
-      HTTPResponseBuilder(HTTPResponse* res);
+      HTTPResponseBuilder(HTTPResponse* res) : response_(res) {
+
+      };
 
       const status_code& status_code() const;
       bool set_status_code(int code);
@@ -135,7 +137,6 @@ namespace http {
 
       
       // Returns a stream representing the request data.
-      // Note that calling this function ensures that none of the previous functions can be called
       HTTPResponse* getResult() {
         return response_;
       };
