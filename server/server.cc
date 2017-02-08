@@ -16,6 +16,7 @@
 #include "http_echo.h"
 #include "http_404.h"
 #include "http_file.h"
+
 using boost::asio::ip::tcp;
 
 Session::Session(tcp::socket socket, std::map<std::string, WebserverOptions>* options)
@@ -75,7 +76,7 @@ void Session::do_read() {
               else if((i = option.second.options_->find("root")) != option.second.options_->end()) {
                 std::string tail = resource_path.substr(option.first.size());
                 printf("you should serve files from %s\n", (std::accumulate(i->second.begin(), i->second.end(), std::string(""))+tail).c_str());
-                builder = new http::HTTPResponseBuilderFile(new http::HTTPResponse(), tail);
+                builder = new http::HTTPResponseBuilderFile(new http::HTTPResponse(), std::accumulate(i->second.begin(), i->second.end(), std::string(""))+tail);
               }
               else {
                 // invalid config
