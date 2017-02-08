@@ -101,17 +101,17 @@ namespace http {
 
       };
 
-      status_code& status_code() const;
+      http::status_code& status_code() const;
       bool set_status_code(int code);
 
-      reason_phrase& reason_phrase() const;
+      http::reason_phrase& reason_phrase() const;
       void set_reason_phrase(std::string phrase);
 
-      http_headers& headers();
-      http_headers& headers() const;
+      http::http_headers& headers();
+      http::http_headers& headers() const;
 
       void set_length(std::size_t length);
-      void set_content_type(mime_type::ContentType type);
+      void set_content_type(http::mime_type::ContentType type);
       // Used to set arbitrary headers.
       void set_header(http_field fields);
       void set_header(std::string field_name, std::string field_value);
@@ -142,7 +142,7 @@ namespace http {
       };
       
     protected:
-      HTTPResponse* response_;   
+      http::HTTPResponse* response_;   
   };
 }
 

@@ -299,7 +299,7 @@ std::string http::HTTPResponse::ToString() {
   return serialized_resp;
 }
 
-const http::status_code& http::HTTPResponseBuilder::status_code() const {
+http::status_code& http::HTTPResponseBuilder::status_code() const {
   return response_->status_code_;
 }
 
@@ -313,7 +313,7 @@ bool http::HTTPResponseBuilder::set_status_code(int code) {
   return false;
 }
 
-const http::reason_phrase& http::HTTPResponseBuilder::reason_phrase() const {
+http::reason_phrase& http::HTTPResponseBuilder::reason_phrase() const {
   return response_->reason_phrase_;
 }
 
@@ -325,7 +325,7 @@ http::http_headers& http::HTTPResponseBuilder::headers() {
   return response_->http_headers_;
 }
 
-const http::http_headers& http::HTTPResponseBuilder::headers() const {
+http::http_headers& http::HTTPResponseBuilder::headers() const {
   return response_->http_headers_;
 }
 
