@@ -6,9 +6,11 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <numeric>
+#include <vector>
+
 #include <boost/asio.hpp>
 #include "../webserver.h"
-#include <vector>
 #include "server.h"
 
 using boost::asio::ip::tcp;
@@ -36,23 +38,53 @@ void Session::do_read() {
       if (!ec) {
         printf("Incoming Data length %lu:\n", len);
 
+        // Todo: convert this to a unique_ptr
         HttpRequest* request = new HttpRequest();
-        if(request->Parse(data_)){
-          // do_write(len);
+        if(!request->Parse(data_)) {
+          printf("Invalid Request: Parse Error");
+          // return an error code. low priority bug (400)
+        }
+        else {
+          //Todo: refactor this.
           printf("%s\n", request->getMethod().c_str());
           printf("%s\n", request->getResourcePath().c_str());
+          std::string resource_path = request->getResourcePath();
+          bool match = false;
           for(const auto & option : *options_) {
-          //   if(request->getResourcePath().compare(option.first) == 0) {
-          //     // match
-          //     std::string behavior = option.second.(*options_)[0]
+            //shorter string, longer string. 
+            auto res = std::mismatch(option.first.begin(), option.first.end(), resource_path.begin());
+            if(res.first == option.first.end()) {
+              // the nginx-config is a prefix
+              // std::string behavior = option.second.(*options_)[0]
+              printf("prefix config %s: http request %s\n", option.first.c_str(), resource_path.c_str());
+              match = true;
+              
+              std::map<std::string, WebserverOptions>::iterator i;
 
-          //     break;
-          //   }
-            printf("option: %s, val: %s\n", option.first.c_str(), option.second.ToString().c_str());
+              if((i = option.second.options_->find("echo")) != option.second.options_->end()) {
+                //return an echo response
+                printf("you should echo!\n");
+
+              }
+              else if((i = option.second.options_->find("root")) != option.second.options_->end()) {
+                printf("you should serve from %s\n", std::accumulate(i->tokens_.begin(), i->tokens_.end(), std::string("")).c_str())
+              }
+              else {
+                // invalid config
+                printf("Unexpected lack of serving options"); 
+                //return 404
+              }
+              break;
+
+            }
+            // printf("option: %s, val: %s\n", option.first.c_str(), option.second.ToString().c_str());
           }
-        }
-        else{
-          printf("Invalid Request: Parse Error");
+
+          if(!match) {
+            //send 404
+          }
+
+
         }
         delete request;
       }
