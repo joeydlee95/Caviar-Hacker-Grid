@@ -9,6 +9,10 @@
 #include <vector>
 #include <string>
 #include <boost/asio.hpp>
+#include "httpRequest.h"
+#include <map>
+#include "../webserver_options.h"
+
 using boost::asio::ip::tcp;
 
 
@@ -16,8 +20,7 @@ class Session
   : public std::enable_shared_from_this<Session>
 {
 public:
-  Session(tcp::socket socket);
-
+  Session(tcp::socket socket, std::map<std::string, WebserverOptions>* options);
   void start();
 
 private:
@@ -28,18 +31,18 @@ private:
   tcp::socket socket_;
   enum { max_length = 1024 };
   std::string data_;
+  std::map<std::string, WebserverOptions>* options_;
 };
 
 class Server 
 {
 public:
-  Server(boost::asio::io_service& io_service, int port);
+  Server(boost::asio::io_service& io_service, int port, std::map<std::string, WebserverOptions>* options);
 
 private:
-  void do_accept();
-
+  void do_accept(std::map<std::string, WebserverOptions>* options);
   tcp::acceptor acceptor_;
   tcp::socket socket_;
 };
 
-#endif
+#endif // If Guard

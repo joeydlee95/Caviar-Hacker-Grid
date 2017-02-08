@@ -1,1 +1,9 @@
-port 3003;
+port 3000;
+
+location /URL {
+    root /path/to/file;
+}
+
+location /echo {
+    echo;
+}

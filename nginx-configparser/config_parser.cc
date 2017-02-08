@@ -25,17 +25,46 @@ std::string NginxConfig::ToString(int depth) {
   return serialized_config;
 }
 
-bool NginxConfig::find(std::string& s) {
-  // TODO: fix this
-  // Finds the first instance of the string. This isn't quite correct, 
-  // instead it should find the port in the root level config.
+bool NginxConfig::find(const std::string& key, std::string& value, std::size_t depth) {
+  // Finds the depth instance of the key from the root level config. 
+  // Expects a string to be the second value, and returns that.
+  // Returns true if and only if the statement is found. 
   for(const auto& statement : statements_) {
-    if (statement->tokens_[0].compare(s) == 0) {
-      s = statement->tokens_[1];
-      return true;
+    if (statement->tokens_[0].compare(key) == 0) {
+      if(statement->tokens_.size() > depth) {
+        value = statement->tokens_[depth];
+        return true;
+      }
     }
   }
   return false;
+}
+
+bool NginxConfig::find(const std::string& key, NginxConfig& value) {
+  // Finds the first instance of the string from the root level config. 
+  // Expects a config token to be the second value, and returns that.
+  for(const auto& statement : statements_) {
+    if (statement->tokens_[0].compare(key) == 0) {
+      if(statement->child_block_.get() != nullptr) {
+        // This should be a unique pointer.. Look into fixing this later.
+          value = *statement->child_block_;
+          return true;
+      } else {
+        printf("Error: no sub-config!");
+      }
+    }
+  }
+  return false;
+}
+
+std::vector<std::shared_ptr<NginxConfigStatement> > NginxConfig::findAll(const std::string& key) {
+  std::vector<std::shared_ptr<NginxConfigStatement> > ret_statements;
+  for(const auto statement : statements_) {
+    if (statement.get()->tokens_[0].compare(key) == 0) {
+      ret_statements.emplace_back(statement);
+    }
+  }
+  return ret_statements;
 }
 
 std::string NginxConfigStatement::ToString(int depth) {
@@ -169,7 +198,6 @@ bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
   while (true) {
     std::string token;
     token_type = ParseToken(config_file, &token);
-    printf ("%s: %s\n", TokenTypeAsString(token_type), token.c_str());
     if (token_type == TOKEN_TYPE_ERROR) {
       break;
     }
