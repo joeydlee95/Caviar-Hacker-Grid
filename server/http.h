@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include <istream>
-#include <boost/asio/buffer.hpp>
+#include <boost/asio/streambuf.hpp>
 
 namespace http {
 
@@ -59,7 +59,7 @@ namespace http {
         CONTENT_TYPE_APP_PDF,
       };
 
-      std::string ContentTypeAsString(ContentType type) const;
+      static std::string ContentTypeAsString(ContentType type);
   };
 
   struct http_field {
@@ -71,22 +71,22 @@ namespace http {
 
   class http_headers {
     public:
-      std::map<std::string, std::string> fields;
+      std::map<std::string, std::string> fields_;
   };
 
   class HTTPResponse {
     public:
       HTTPResponse();
-      void to_stream();
+      std::string ToString();
 
       reason_phrase reason_phrase_;
       status_code status_code_;
       mime_type mime_type_;
       http_headers http_headers_;
-      std::istream body_;
-      std::string http_version_;
+      std::string http_version_ = "HTTP/1.1";
 
-      boost::asio::streambuf os_;
+      // TODO: Make this a data stream
+      std::string body_;
       
       const char* line_break = "\r\n";
       
@@ -112,10 +112,13 @@ namespace http {
       void set_content_type(mime_type::ContentType type);
       // Used to set arbitrary headers.
       void set_header(http_field fields);
+      void set_header(std::string field_name, std::string field_value);
       void set_headers(std::vector<http_field> fields);
 
       // TODO: add UTF16 support, via Boost-Locale (?)
 
+      void set_body(std::string body);
+      /*
       // If the content-type header is not yet set, it will set it to 
       void set_body(std::string &&body_text);
       // If the content-type header is not yet set, it will set it to 
@@ -128,6 +131,7 @@ namespace http {
       void set_body(std::istream &stream);
       // If the content-type header is not yet set, it will set it to 
       void set_body(std::istream &stream, std::size_t content_length);
+      */
 
       
       // Returns a stream representing the request data.

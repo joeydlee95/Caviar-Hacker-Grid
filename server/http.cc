@@ -207,7 +207,7 @@ void http::reason_phrase::setDefault(int code) {
   }
 }
 
-std::string http::mime_type::ContentTypeAsString(ContentType type) const {
+std::string http::mime_type::ContentTypeAsString(ContentType type) {
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
   // http://www.iana.org/assignments/media-types/media-types.xhtml#imag
   switch(type) {
@@ -278,23 +278,22 @@ std::string http::mime_type::ContentTypeAsString(ContentType type) const {
 }
 
 
-void http::HTTPResponse::to_stream() {
-  // TODO: Make these overload the '<<' operator instead.
-  os_ << http_version_;
-  os_ << status_code_.status_code_;
-  os_ << reason_phrase_.reason_phrase_;
+std::string http::HTTPResponse::ToString() {
+  std::string serialized_resp;
+  serialized_resp.append(http_version_ + " " + std::to_string(status_code_.status_code_) + " " + reason_phrase_.reason_phrase_);
+  serialized_resp.append(line_break);
   
-  os_ << line_break;
-
-  for(const auto & header : http_headers_) {
-    os_ << header.first;
-    os_ << header.second;
-    os_ << line_break;
+  for(const auto & header : http_headers_.fields_) {
+    serialized_resp.append(header.first);
+    serialized_resp.append(": ");
+    serialized_resp.append(header.second);
+    serialized_resp.append(line_break);
   }
 
-  os_ << line_break;
-  os_ << line_break;
-  os_ << body_.rdbuf();
+  serialized_resp.append(line_break);
+  serialized_resp.append(line_break);
+  serialized_resp.append(body_);
+  return serialized_resp;
 }
 
 const http::status_code& http::HTTPResponseBuilder::status_code() const {
@@ -310,7 +309,7 @@ const http::reason_phrase& http::HTTPResponseBuilder::reason_phrase() const {
 }
 
 void http::HTTPResponseBuilder::set_reason_phrase(std::string phrase) {
-  response->reason_phrase_.reason_phrase_ = phrase;
+  response_->reason_phrase_.reason_phrase_ = phrase;
 }
 
 http::http_headers& http::HTTPResponseBuilder::headers() {
@@ -321,6 +320,7 @@ const http::http_headers& http::HTTPResponseBuilder::headers() const {
   return response_->http_headers_;
 }
 
+/*
 // R-value. See: http://stackoverflow.com/questions/4549151/c-double-address-operator
 void http::HTTPResponseBuilder::set_body(std::string &&body_text) {
   response_->body_ << std::move(std::istringstream is(body_text));
@@ -348,4 +348,32 @@ void http::HTTPResponseBuilder::set_body(std::istream &stream) {
 void http::HTTPResponseBuilder::set_body(std::istream &stream, std::size_t content_length) {
   response_.body_ = std::move(stream);
   set_length(content_length);
+}*/
+
+
+
+void http::HTTPResponseBuilder::set_length(std::size_t length) {
+  set_header("Content-Length", std::to_string(length));
+}
+
+void http::HTTPResponseBuilder::set_content_type(http::mime_type::ContentType type) {
+  set_header("Content-Type", http::mime_type::ContentTypeAsString(type));
+}
+
+void http::HTTPResponseBuilder::set_header(std::string field_name, std::string field_value) {
+  response_->http_headers_.fields_[field_name] = field_value;
+}
+
+void http::HTTPResponseBuilder::set_header(http::http_field fields) {
+  set_header(fields.field_name, fields.field_value);
+}
+
+void http::HTTPResponseBuilder::set_headers(std::vector<http_field> fields) {
+  for(const auto& field : fields) {
+    set_header(field);
+  }
+}
+
+void http::HTTPResponseBuilder::set_body(std::string body) {
+  response_->body_ = body;
 }
