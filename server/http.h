@@ -79,10 +79,10 @@ namespace http {
       HTTPResponse();
       std::string ToString();
 
-      reason_phrase reason_phrase_;
-      status_code status_code_;
-      mime_type mime_type_;
-      http_headers http_headers_;
+      http::reason_phrase reason_phrase_;
+      http::status_code status_code_;
+      http::mime_type mime_type_;
+      http::http_headers http_headers_;
       std::string http_version_ = "HTTP/1.1";
 
       // TODO: Make this a data stream
