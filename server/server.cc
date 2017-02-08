@@ -36,6 +36,7 @@ void Session::do_read() {
   socket_.async_read_some(boost::asio::buffer(&data_[0], data_.size()),
     [this, self](boost::system::error_code ec, std::size_t len) {
       if (!ec) {
+        bool match = false;
         printf("Incoming Data length %lu:\n", len);
 
         // Todo: convert this to a unique_ptr
@@ -49,7 +50,6 @@ void Session::do_read() {
           printf("%s\n", request->getMethod().c_str());
           printf("%s\n", request->getResourcePath().c_str());
           std::string resource_path = request->getResourcePath();
-          bool match = false;
           for(const auto & option : *options_) {
             //shorter string, longer string. 
             auto res = std::mismatch(option.first.begin(), option.first.end(), resource_path.begin());
@@ -59,29 +59,29 @@ void Session::do_read() {
               printf("prefix config %s: http request %s\n", option.first.c_str(), resource_path.c_str());
               match = true;
               
-              std::map<std::string, WebserverOptions>::iterator i;
-
+              std::map<std::string, std::vector<std::string> >::iterator i;
               if((i = option.second.options_->find("echo")) != option.second.options_->end()) {
                 //return an echo response
                 printf("you should echo!\n");
 
               }
               else if((i = option.second.options_->find("root")) != option.second.options_->end()) {
-                printf("you should serve from %s\n", std::accumulate(i->tokens_.begin(), i->tokens_.end(), std::string("")).c_str())
+                // printf("you should serve from %s\n", std::accumulate(i->second.options_begin(), i->second.end(), std::string("")).c_str()); 
+                printf("you should serve files from %s!\n", std::accumulate(i->second.begin(), i->second.end(), std::string("")).c_str());
               }
               else {
                 // invalid config
-                printf("Unexpected lack of serving options"); 
-                //return 404
+                printf("Unexpected lack of serving options\n"); 
+                //return 500
               }
               break;
 
             }
-            // printf("option: %s, val: %s\n", option.first.c_str(), option.second.ToString().c_str());
           }
 
           if(!match) {
             //send 404
+            printf("path not found!\n");
           }
 
 
