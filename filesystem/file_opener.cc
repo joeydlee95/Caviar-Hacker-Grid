@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 bool FileIO::FileExists(std::string fname) {
   struct stat s;
-  if(stat(fname.c_str(), &s) == 0 && s.st_mode & S_IFREG) {
+  if(stat(fname.c_str(), &s) == 0 && (s.st_mode & S_IFREG)) {
     return true;
   }
   else {
