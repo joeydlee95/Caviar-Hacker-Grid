@@ -141,7 +141,7 @@ namespace http {
         return response_;
       };
       
-    private:
+    protected:
       HTTPResponse* response_;   
   };
 }
