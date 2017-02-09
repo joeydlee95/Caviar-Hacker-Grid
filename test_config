@@ -1,7 +1,11 @@
 port 3000;
 
-location /URL {
-    root /path/to/file;
+location /static1 {
+    root /server;
+}
+
+location /static2 {
+    root nginx-configparser;
 }
 
 location /echo {

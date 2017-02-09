@@ -12,6 +12,10 @@
 #include <boost/asio.hpp>
 #include "../webserver.h"
 #include "server.h"
+#include "http.h"
+#include "http_echo.h"
+#include "http_404.h"
+#include "http_file.h"
 
 using boost::asio::ip::tcp;
 
@@ -44,34 +48,39 @@ void Session::do_read() {
         if(!request->Parse(data_)) {
           printf("Invalid Request: Parse Error");
           // return an error code. low priority bug (400)
+          builder = new http::HTTPResponseBuilder(new http::HTTPResponse());
+          builder->set_status_code(400);
+          builder->set_reason_phrase(http::reason_phrase::getDefault(400));
+          builder->set_content_type(http::mime_type::CONTENT_TYPE_TEXT_HTML);
+          printf("404: \n%s\n", builder->getResult()->ToString().c_str());
         }
         else {
-          //Todo: refactor this.
-          printf("%s\n", request->getMethod().c_str());
-          printf("%s\n", request->getResourcePath().c_str());
           std::string resource_path = request->getResourcePath();
           for(const auto & option : *options_) {
-            //shorter string, longer string. 
+            
+            // TODO: fix bug with subdirectories. This code doesn't find those properly, instead it finds the first matching prefix on the config
             auto res = std::mismatch(option.first.begin(), option.first.end(), resource_path.begin());
             if(res.first == option.first.end()) {
-              // the nginx-config is a prefix
-              // std::string behavior = option.second.(*options_)[0]
-              printf("prefix config %s: http request %s\n", option.first.c_str(), resource_path.c_str());
               match = true;
               
               std::map<std::string, std::vector<std::string> >::iterator i;
               if((i = option.second.options_->find("echo")) != option.second.options_->end()) {
                 //return an echo response
-                printf("you should echo!\n");
-
+                
+                builder = new http::HTTPResponseBuilderEcho(new http::HTTPResponse(), data_);
+                printf("echoing: \n%s\n", builder->getResult()->ToString().c_str());
               }
               else if((i = option.second.options_->find("root")) != option.second.options_->end()) {
-                // printf("you should serve from %s\n", std::accumulate(i->second.options_begin(), i->second.end(), std::string("")).c_str()); 
-                printf("you should serve files from %s!\n", std::accumulate(i->second.begin(), i->second.end(), std::string("")).c_str());
+                std::string tail = resource_path.substr(option.first.size());
+                printf("Serve file from %s\n", (std::accumulate(i->second.begin(), i->second.end(), std::string(""))+tail).c_str());
+                builder = new http::HTTPResponseBuilderFile(new http::HTTPResponse(), std::accumulate(i->second.begin(), i->second.end(), std::string(""))+tail);
               }
               else {
                 // invalid config
                 printf("Unexpected lack of serving options\n"); 
+                builder = new http::HTTPResponseBuilder404(new http::HTTPResponse());
+                builder->set_status_code(500);
+                builder->set_reason_phrase(http::reason_phrase::getDefault(500));
                 //return 500
               }
               break;
@@ -81,28 +90,23 @@ void Session::do_read() {
 
           if(!match) {
             //send 404
-            printf("path not found!\n");
+            printf("path not found in config!\n");
+            builder = new http::HTTPResponseBuilder404(new http::HTTPResponse());
           }
 
 
         }
+        do_write(builder);
         delete request;
       }
   });
 }
 
-void Session::do_write(std::size_t length) {
+void Session::do_write(http::HTTPResponseBuilder* builder) {
   auto self(shared_from_this());
-  std::string header_string = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
-  data_.insert(0, header_string);
-  boost::asio::async_write(socket_, boost::asio::buffer(&data_[0], length + header_string.length()),
+  std::string builder_string = builder->getResult()->ToString();
+  boost::asio::async_write(socket_, boost::asio::buffer(&builder_string[0], builder_string.length()),
     [this, self](boost::system::error_code ec, std::size_t len) {
-      if (!ec) {
-        printf("Outgoing Data:\n");
-        for (std::size_t i = 0; i < len; i++) {
-            printf("%c", data_[i]);
-        }
-      }
   });
 
   //session just ends after wrtie

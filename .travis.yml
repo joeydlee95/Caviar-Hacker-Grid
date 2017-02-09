@@ -3,7 +3,6 @@ dist: trusty
 sudo: required
 script: 
     - make test  
-    - make integration
 addons:
  apt:
   packages:
