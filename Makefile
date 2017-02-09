@@ -7,7 +7,7 @@ GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include
 GMOCK_FLAGS=-isystem $(GMOCK_DIR)/include
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -pedantic -std=c++11 $(BOOST)
 CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest webserver_options server/http server/http_404 server/http_echo server/http_file filesystem/file_opener
-GCOV=config_parser.cc server.cc webserver.cc
+GCOV=config_parser.cc server.cc webserver.cc httpRequest.cc webserver_options.cc http.cc http_404.cc http_echo.cc http_file.cc file_opener.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
 TESTS=$(CLASSES:=_test.cc)
 
@@ -51,5 +51,6 @@ integration: webserver
 clean:
 	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
 	rm -rf nginx-configparser/*.a nginx-configparser/*.gcda nginx-configparser/*.gcno nginx-configparser/*.gcov
+	rm -rf httpRequest_test webserver_options_test webserver_test server/httpRequest_test server/http_404_test server/http_echo_test server/http_file_test server/http_test server/server_test filesystem/file_opener_test nginx-configparser/config_parser_test
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
