@@ -198,3 +198,4 @@ TEST_F(NginxStringConfigTest, RealConfigExample) {
   EXPECT_TRUE(s1->child_block_.get()->find("echo", path, 0));
   EXPECT_EQ(path, "echo");
 }
+

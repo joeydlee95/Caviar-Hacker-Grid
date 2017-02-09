@@ -21,6 +21,7 @@ server/server.cc: server/server.h
 webserver.cc: webserver.h
 server/httpRequest.cc: server/httpRequest.h
 webserver_options.cc: webserver_options.h
+filesystem/file_opener.cc: filesystem/file_opener.h
 
 webserver: $(UTIL_CLASSES)
 	$(CXX) -o $@ $^ $(CXXFLAGS) main.cc
@@ -54,3 +55,7 @@ clean:
 	rm -rf httpRequest_test webserver_options_test webserver_test server/httpRequest_test server/http_404_test server/http_echo_test server/http_file_test server/http_test server/server_test filesystem/file_opener_test nginx-configparser/config_parser_test
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
+
+new_test: webserver_options.cc libgtest.a libgmock.a
+	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread $(UTIL_CLASSES) $(GMOCK_DIR)/src/gmock_main.cc webserver_options_test.cc libgmock.a $(BOOST) -o new_test
+	./new_test
