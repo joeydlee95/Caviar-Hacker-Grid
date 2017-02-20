@@ -8,7 +8,7 @@
 // options is a bit of a misnomer. option would be more correct. 
 class WebserverOptions {
 public:
-	WebserverOptions(std::unique_ptr<NginxConfig> const &statement, std::map<std::string, std::vector<std::string> >* options);
+	WebserverOptions(std::shared_ptr<Nginx::NginxConfig> const &statement, std::map<std::string, std::vector<std::string> >* options);
 	std::map<std::string, std::vector<std::string> >* options_;
 	std::string ToString() const;
     // std::string 

@@ -16,7 +16,11 @@ int main(int argc, char* argv[]) {
 
   Webserver server(&config);
 
-  if(!server.run_server(argv[1])) {
+  if(!server.Init()) {
+    printf("Error initializing server");
+    return 1;
+  }
+  if(!server.run_server()) {
     printf("Error running server.");
   	return 1;
   }

@@ -17,82 +17,109 @@
 
 #include "config_parser.h"
 
-std::string NginxConfig::ToString(int depth) {
+enum TokenType {
+  TOKEN_TYPE_START = 0,
+  TOKEN_TYPE_NORMAL = 1,
+  TOKEN_TYPE_START_BLOCK = 2,
+  TOKEN_TYPE_END_BLOCK = 3,
+  TOKEN_TYPE_COMMENT = 4,
+  TOKEN_TYPE_STATEMENT_END = 5,
+  TOKEN_TYPE_EOF = 6,
+  TOKEN_TYPE_ERROR = 7
+};
+
+enum TokenParserState {
+  TOKEN_STATE_INITIAL_WHITESPACE = 0,
+  TOKEN_STATE_SINGLE_QUOTE = 1,
+  TOKEN_STATE_DOUBLE_QUOTE = 2,
+  TOKEN_STATE_TOKEN_TYPE_COMMENT = 3,
+  TOKEN_STATE_TOKEN_TYPE_NORMAL = 4
+};
+
+const char* TokenTypeAsString(TokenType type);
+TokenType ParseToken(std::istream* input, std::string* value);
+
+std::string Nginx::NginxConfig::ToString(int tabLevel) const {
   std::string serialized_config;
-  for (const auto& statement : statements_) {
-    serialized_config.append(statement->ToString(depth));
+
+  for(const auto& child_block_ : children_) {
+    if (child_block_.get() != nullptr) {
+      serialized_config.append(child_block_->ToStringSubBlock(tabLevel));
+    }
   }
   return serialized_config;
 }
 
-bool NginxConfig::find(const std::string& key, std::string& value, std::size_t depth) {
-  // Finds the depth instance of the key from the root level config. 
-  // Expects a string to be the second value, and returns that.
-  // Returns true if and only if the statement is found. 
-  for(const auto& statement : statements_) {
-    if (statement->tokens_[0].compare(key) == 0) {
-      if(statement->tokens_.size() > depth) {
-        value = statement->tokens_[depth];
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
-bool NginxConfig::find(const std::string& key, NginxConfig& value) {
-  // Finds the first instance of the string from the root level config. 
-  // Expects a config token to be the second value, and returns that.
-  for(const auto& statement : statements_) {
-    if (statement->tokens_[0].compare(key) == 0) {
-      if(statement->child_block_.get() != nullptr) {
-        // This should be a unique pointer.. Look into fixing this later.
-          value = *statement->child_block_;
-          return true;
-      } else {
-        printf("Error: no sub-config!");
-      }
-    }
-  }
-  return false;
-}
+std::string Nginx::NginxConfig::ToStringSubBlock(int tabLevel) const {
+  std::string serialized_config;
 
-std::vector<std::shared_ptr<NginxConfigStatement> > NginxConfig::findAll(const std::string& key) {
-  std::vector<std::shared_ptr<NginxConfigStatement> > ret_statements;
-  for(const auto statement : statements_) {
-    if (statement.get()->tokens_[0].compare(key) == 0) {
-      ret_statements.emplace_back(statement);
-    }
-  }
-  return ret_statements;
-}
-
-std::string NginxConfigStatement::ToString(int depth) {
-  std::string serialized_statement;
-  for (int i = 0; i < depth; ++i) {
-    serialized_statement.append("  ");
+  for (int i = 0; i < tabLevel; ++i) {
+    serialized_config.append("  ");
   }
   for (unsigned int i = 0; i < tokens_.size(); ++i) {
     if (i != 0) {
-      serialized_statement.append(" ");
+      serialized_config.append(" ");
     }
-    serialized_statement.append(tokens_[i]);
+    serialized_config.append(tokens_[i]);
   }
-  if (child_block_.get() != nullptr) {
-    serialized_statement.append(" {\n");
-    serialized_statement.append(child_block_->ToString(depth + 1));
-    for (int i = 0; i < depth; ++i) {
-      serialized_statement.append("  ");
+  if(children_.size() == 0) { // no subblock
+    serialized_config.append(";\n");
+  }
+  else {
+    for(const auto& child_block_ : children_) {
+      if (child_block_.get() != nullptr) {
+        serialized_config.append(" {\n");
+        serialized_config.append(child_block_->ToStringSubBlock(tabLevel + 1));
+        for (int i = 0; i < tabLevel; ++i) {
+          serialized_config.append("  ");  
+        }
+        serialized_config.append("}\n");
+      }
+      else {
+        serialized_config.append(";\n");
+      }
     }
-    serialized_statement.append("}");
-  } else {
-    serialized_statement.append(";");
   }
-  serialized_statement.append("\n");
-  return serialized_statement;
+  return serialized_config;
 }
 
-const char* NginxConfigParser::TokenTypeAsString(TokenType type) {
+
+bool  Nginx::NginxConfig::find(const std::string& key, NginxConfig& value) const {
+  // Finds the first instance of the string from the root level config. 
+  // Expects a config token to be the second value, and returns that.
+  for(const auto& child : children_) {
+    if (child->tokens_[0].compare(key) == 0) {
+        value = *child;
+        return true;
+    }
+  }
+  return false;
+}
+
+std::vector<std::string> Nginx::NginxConfig::find(const std::string& key) const {
+  // Finds the first instance of the string from the root level config. 
+  // Expects a config token to be the second value, and returns that.
+  std::vector<std::string> val;
+  for(const auto& child : children_) {
+    if (child->tokens_[0].compare(key) == 0) {
+        val.insert(val.end(), child->tokens_.begin(), child->tokens_.end());
+        return val;
+    }
+  }
+  return val;
+}
+std::vector<std::shared_ptr<Nginx::NginxConfig> > Nginx::NginxConfig::findAll(const std::string& key) const {
+  std::vector<std::shared_ptr<NginxConfig> > ret_config;
+  for(const auto child : children_) {
+    if (child.get()->tokens_[0].compare(key) == 0) {
+      ret_config.emplace_back(child);
+    }
+  }
+  return ret_config;
+}
+
+const char* TokenTypeAsString(TokenType type) {
   switch (type) {
     case TOKEN_TYPE_START:         return "TOKEN_TYPE_START";
     case TOKEN_TYPE_NORMAL:        return "TOKEN_TYPE_NORMAL";
@@ -106,8 +133,7 @@ const char* NginxConfigParser::TokenTypeAsString(TokenType type) {
   }
 }
 
-NginxConfigParser::TokenType NginxConfigParser::ParseToken(std::istream* input,
-                                                           std::string* value) {
+TokenType ParseToken(std::istream* input, std::string* value) {
   TokenParserState state = TOKEN_STATE_INITIAL_WHITESPACE;
   while (input->good()) {
     const char c = input->get();
@@ -189,7 +215,7 @@ NginxConfigParser::TokenType NginxConfigParser::ParseToken(std::istream* input,
   return TOKEN_TYPE_EOF;
 }
 
-bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
+bool Nginx::ParseConfig(std::istream* config_file, NginxConfig* config) {
   std::stack<NginxConfig*> config_stack;
   config_stack.push(config);
   TokenType last_token_type = TOKEN_TYPE_START;
@@ -210,18 +236,21 @@ bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
     if (token_type == TOKEN_TYPE_START) {
       // Error.
       break;
-    } else if (token_type == TOKEN_TYPE_NORMAL) {
+    } 
+    
+    if (token_type == TOKEN_TYPE_NORMAL) {
       if (last_token_type == TOKEN_TYPE_START ||
           last_token_type == TOKEN_TYPE_STATEMENT_END ||
           last_token_type == TOKEN_TYPE_START_BLOCK ||
           last_token_type == TOKEN_TYPE_END_BLOCK ||
           last_token_type == TOKEN_TYPE_NORMAL) {
         if (last_token_type != TOKEN_TYPE_NORMAL) {
-          config_stack.top()->statements_.emplace_back(
-              new NginxConfigStatement);
+          // Creates a new entry into the parent NginxConfig.
+          config_stack.top()->children_.emplace_back(
+              new NginxConfig);
         }
-        config_stack.top()->statements_.back().get()->tokens_.push_back(
-            token);
+        // Pushes a token on the first child 
+        config_stack.top()->children_.back().get()->tokens_.push_back(token);
       } else {
         // Error.
         break;
@@ -232,23 +261,25 @@ bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
         break;
       }
     } else if (token_type == TOKEN_TYPE_START_BLOCK) {
-      block_depth++;
       if (last_token_type != TOKEN_TYPE_NORMAL) {
         // Error.
         break;
       }
-      NginxConfig* const new_config = new NginxConfig;
-      config_stack.top()->statements_.back().get()->child_block_.reset(
-          new_config);
+      block_depth++;
+      NginxConfig* const new_config = config_stack.top()->children_.back().get();
+      // config_stack.top()->children_.back().reset(
+      //     new_config);
       config_stack.push(new_config);
     } else if (token_type == TOKEN_TYPE_END_BLOCK) {
-      block_depth--;
       if (last_token_type != TOKEN_TYPE_STATEMENT_END && 
-          last_token_type != TOKEN_TYPE_END_BLOCK) {
+          last_token_type != TOKEN_TYPE_END_BLOCK     &&
+          last_token_type != TOKEN_TYPE_START_BLOCK
+          ) {
         // Error.
         break;
       }
       config_stack.pop();
+      block_depth--;
     } else if (token_type == TOKEN_TYPE_EOF) {
       if (last_token_type != TOKEN_TYPE_STATEMENT_END &&
           last_token_type != TOKEN_TYPE_END_BLOCK     &&
@@ -259,6 +290,7 @@ bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
       if (block_depth != 0) {
         printf ("Unmatched config blocks");
       }
+      // If all blocks are matched, config valid.
       return block_depth == 0;
       
     } else {
@@ -274,16 +306,16 @@ bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
   return false;
 }
 
-bool NginxConfigParser::Parse(const char* file_name, NginxConfig* config) {
+bool Nginx::ParseFile(const std::string file_name, NginxConfig* config) {
   std::ifstream config_file;
   config_file.open(file_name);
   if (!config_file.good()) {
-    printf ("Failed to open config file: %s\n", file_name);
+    printf ("Failed to open config file: %s\n", file_name.c_str());
     return false;
   }
 
   const bool return_value =
-      Parse(dynamic_cast<std::istream*>(&config_file), config);
+      Nginx::ParseConfig(dynamic_cast<std::istream*>(&config_file), config);
   config_file.close();
   return return_value;
 }

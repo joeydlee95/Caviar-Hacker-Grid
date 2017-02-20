@@ -1,7 +1,14 @@
-foo "bar";
+# This is a comment.
 
-server {
-  listen   80;
-  server_name foo.com;
-  root /home/ubuntu/sites/foo/;
+port 2020;  # This is also a comment.
+
+path / StaticHandler {
+  root /foo/bar;
 }
+
+path /echo EchoHandler {
+
+}
+
+# Default response handler if no handlers match.
+default NotFoundHandler {}

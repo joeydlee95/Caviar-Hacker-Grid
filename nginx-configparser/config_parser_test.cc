@@ -3,47 +3,59 @@
 
 #include "gtest/gtest.h"
 #include "config_parser.h"
+#include <boost/algorithm/string/join.hpp>
 
-TEST(NginxConfigParserTest, SimpleConfig) { //first is test case bracket, second is the test cases name
-  NginxConfigParser parser;
-  NginxConfig out_config;
+TEST(NginxConfigParserTest, SimpleFileConfig) { //first is test case bracket, second is the test cases name
+  Nginx::NginxConfig out_config;
 
-  bool success = parser.Parse("test_config", &out_config);
-
+  bool success = Nginx::ParseFile("example_config", &out_config);
   EXPECT_TRUE(success);
 }
 
-TEST(NginxConfigParserTest, NonexistentConfig) { //first is test case bracket, second is the test cases name
-  NginxConfigParser parser;
-  NginxConfig out_config;
+TEST(NginxConfigParserTest, NonexistentFileConfig) { //first is test case bracket, second is the test cases name
+  Nginx::NginxConfig out_config;
 
-  bool success = parser.Parse("dead_config", &out_config);
+  bool success = Nginx::ParseFile("nonexistent_config", &out_config);
 
   EXPECT_FALSE(success);
 }
 
 
 TEST(NginxConfigTest, ToString) {
-  NginxConfigStatement statement;
+  Nginx::NginxConfig statement;
   statement.tokens_.push_back("foo");
   statement.tokens_.push_back("bar");
 
-  EXPECT_EQ(statement.ToString(0), "foo bar;\n"); // note that the 0 contains the indentation level
+  EXPECT_EQ(statement.ToStringSubBlock(0), "foo bar;\n"); // note that the 0 contains the indentation level
 }
 
 class NginxStringConfigTest : public ::testing::Test { //fixture, lets you define helper methods
 protected:
   bool ParseString(const std::string config_string) {
     std::stringstream config_stream(config_string);
-    return parser_.Parse(&config_stream, &out_config_);
+    return Nginx::ParseConfig(&config_stream, &out_config_);
   }
 
-  bool FindConfig(const std::string key) {
+  bool FindSubConfig(const std::string key) {
     return out_config_.find(key, out_config_);
   }
-  NginxConfigParser parser_;
-  NginxConfig out_config_;
+
+  bool FindAllConfig(const std::string key) {
+    out_configs_ = out_config_.findAll(key);
+    return out_configs_.size() != 0;
+  }
+
+  bool FindString(const std::string key) {
+    out_tokens_ =  out_config_.find(key);
+    return out_tokens_.size() != 0;
+  }
+
+  std::vector<std::string> out_tokens_;
+  Nginx::NginxConfig out_config_;
+  std::vector<std::shared_ptr<Nginx::NginxConfig> > out_configs_;
 };
+
+
 
 TEST_F(NginxStringConfigTest, ToString) {
   ASSERT_TRUE(ParseString("port 8000;")); 
@@ -56,31 +68,13 @@ TEST_F(NginxStringConfigTest, EmbeddedToString) {
   EXPECT_EQ(out_config_.ToString(1), "  server {\n    port 8000;\n  }\n");
 }
 
-
-TEST_F(NginxStringConfigTest, findTest) {
-  std::string s = "port";
-  ASSERT_TRUE(ParseString("port 8000;")); 
-  EXPECT_TRUE(out_config_.find("port", s));
-  EXPECT_EQ(s, "8000");
-  EXPECT_FALSE(out_config_.find("port", s, 2));
-  EXPECT_FALSE(out_config_.find("8000", s)); 
-}
-
-TEST_F(NginxStringConfigTest, findTestEmbeddedBlock) {
-  std::string s = "port";
-  ASSERT_TRUE(ParseString("server {\nport 8000;\n}")); 
-  EXPECT_FALSE(out_config_.find("port", s)); 
-}
-
-
-
 TEST_F(NginxStringConfigTest, SimpleConfig) {
   
   EXPECT_TRUE(ParseString("foo bar;")); // note that we can treat the expects as straems
-  EXPECT_EQ(1, out_config_.statements_.size()) 
+  EXPECT_EQ(1, out_config_.children_.size()) 
     << "Config has one statements";
-  EXPECT_EQ(out_config_.statements_[0]->tokens_[0], "foo");
-  EXPECT_EQ(out_config_.statements_[0]->tokens_[1], "bar");
+  EXPECT_EQ(out_config_.children_[0]->tokens_[0], "foo");
+  EXPECT_EQ(out_config_.children_[0]->tokens_[1], "bar");
 }
 
 TEST_F(NginxStringConfigTest, InvalidConfig) {
@@ -126,76 +120,85 @@ TEST_F(NginxStringConfigTest, SimpleCommentConfig) {
 
 TEST_F(NginxStringConfigTest, ComplexCommentConfig) {
   EXPECT_TRUE(ParseString("server\n { server2 \n{ # test \ntestlisten 80;# test \n} \n}"));
-
 }
 
+TEST_F(NginxStringConfigTest, BlankBlockConfig) {
+  EXPECT_TRUE(ParseString("server {}"));
+}
 
 TEST_F(NginxStringConfigTest, SingleQuoteTest) {
   EXPECT_TRUE(ParseString("port \'8000\';"));
-  EXPECT_EQ(out_config_.statements_[0]->tokens_[0], "port");
-  EXPECT_EQ(out_config_.statements_[0]->tokens_[1], "\'8000\'");
+  EXPECT_EQ(out_config_.children_[0]->tokens_[0], "port");
+  EXPECT_EQ(out_config_.children_[0]->tokens_[1], "\'8000\'");
 }
 
-// TODO: ADD A CONFIG TEST WITH DUPLICATE BODIES.
+TEST_F(NginxStringConfigTest, FindTestSingleStatement) {
+  ASSERT_TRUE(ParseString("port 8000;")); 
+  EXPECT_TRUE(FindString("port"));
+  EXPECT_TRUE(out_tokens_.size() == 2);
+  EXPECT_EQ(out_tokens_[1], "8000");
+  EXPECT_FALSE(FindString("8000")); 
+}
+
+TEST_F(NginxStringConfigTest, FindTestEmbeddedBlockInvalid) {
+  ASSERT_TRUE(ParseString("server {\nport 8000;\n}")); 
+  EXPECT_FALSE(FindString("port")); 
+}
 
 TEST_F(NginxStringConfigTest, FindSubConfig) {
-  NginxConfig config;
-  std::string s = "";
   ASSERT_TRUE(ParseString("port 3000;\necho {/URL; }"));
-  EXPECT_TRUE(out_config_.find("port", s));
-  EXPECT_EQ(s, "3000");
+  EXPECT_TRUE(FindString("port"));
+  EXPECT_EQ(out_tokens_[1], "3000");
   
-  EXPECT_TRUE(out_config_.find("echo", config));
-  EXPECT_EQ(config.ToString(), "/URL;\n");
+  EXPECT_TRUE(FindSubConfig("echo"));
+  EXPECT_EQ(out_config_.ToString(), "/URL;\n"); 
+}
+
+TEST_F(NginxStringConfigTest, FindDuplicatePath) {
+  ASSERT_TRUE(ParseString("port 3000;\necho {/URL; }\necho {/URL2; }"));
+  EXPECT_TRUE(FindString("port"));
+  EXPECT_EQ(out_tokens_[1], "3000");
+  
+  EXPECT_TRUE(FindAllConfig("echo"));
+  EXPECT_EQ(out_configs_[0]->ToString(), "/URL;\n"); 
+  EXPECT_EQ(out_configs_[1]->ToString(), "/URL2;\n"); 
 }
 
 
 TEST_F(NginxStringConfigTest, FindSubSubConfig) {
-  NginxConfig config;
-  NginxConfig sub_config;
-  std::string s = "";
   ASSERT_TRUE(ParseString("port 3000;\necho { level2 { test; } }"));
-  EXPECT_TRUE(out_config_.find("port", s));
-  EXPECT_EQ(s, "3000");
+  EXPECT_TRUE(FindString("port"));
+  EXPECT_EQ(out_tokens_[1], "3000");
   
-  ASSERT_TRUE(out_config_.find("echo", config));
-  EXPECT_EQ(config.ToString(), "level2 {\n  test;\n}\n");
-  EXPECT_FALSE(config.find("port", s, 0));
-  EXPECT_TRUE(config.find("level2", s, 0));
-  EXPECT_FALSE(config.find("level2", s));
+  ASSERT_TRUE(FindSubConfig("echo"));
+  EXPECT_EQ(out_config_.ToString(), "level2 {\n  test;\n}\n");
+  EXPECT_FALSE(FindString("port"));
+  EXPECT_TRUE(FindString("level2"));
 
-  ASSERT_TRUE(config.find("level2", sub_config));
-  EXPECT_FALSE(sub_config.find("port", s));
-  EXPECT_FALSE(sub_config.find("test", s));
-  EXPECT_TRUE(sub_config.find("test", s, 0));
-  EXPECT_EQ(s, "test");
+  ASSERT_TRUE(FindSubConfig("level2"));
+  EXPECT_FALSE(FindString("port"));
+  EXPECT_TRUE(FindString("test"));
+  EXPECT_EQ(out_config_.ToString(), "test;\n");
+  EXPECT_TRUE(FindSubConfig("test"));
+  EXPECT_EQ(out_tokens_[0], "test");
+  EXPECT_EQ(out_tokens_.size(), 1);
 }
-
 
 TEST_F(NginxStringConfigTest, RealConfigExample) {
-  NginxConfig config;
-  std::string s = "";
-  ASSERT_TRUE(ParseString("port 3000;\n\nlocation /URL {\n    root /path/to/file;\n}\n\nlocation /echo {\n    echo;\n}\n"));
-  printf("port 3000;\n\nlocation /URL {\n    root /path/to/file;\n}\n\nlocation /echo {\n    echo;\n}\n");
-  EXPECT_TRUE(out_config_.find("port", s));
-  EXPECT_EQ(s, "3000");
+  ASSERT_TRUE(ParseString("port 2020;\n\npath / StaticHandler {\n  root /foo/bar;\n}\n\npath /echo EchoHandler {}\n\ndefault NotFoundHandler {}"));
+  printf("%s\n", out_config_.ToString().c_str());
+  EXPECT_TRUE(FindString("port"));
+  EXPECT_EQ(out_tokens_[1], "2020");
+  EXPECT_EQ(out_tokens_.size(), 2);
   
+  
+  EXPECT_TRUE(FindAllConfig("path"));
+  EXPECT_EQ(out_configs_.size(), 2);
+  std::string joined_string = boost::algorithm::join(out_configs_[0]->tokens_, " ");
+  EXPECT_EQ(joined_string, "path / StaticHandler");
+  joined_string = boost::algorithm::join(out_configs_[1]->tokens_, " ");
+  EXPECT_EQ(joined_string, "path /echo EchoHandler");
 
-  std::vector<std::shared_ptr<NginxConfigStatement> > statements = out_config_.findAll("location");
-  ASSERT_EQ(statements.size(), 2);
-  NginxConfigStatement* s0 = statements[0].get();
-  NginxConfigStatement* s1 = statements[1].get();
-  ASSERT_NE(s0, nullptr);
-  ASSERT_NE(s1, nullptr);
-  ASSERT_EQ(s0->ToString(0), "location /URL {\n  root /path/to/file;\n}\n");
-  ASSERT_EQ(s1->ToString(0), "location /echo {\n  echo;\n}\n");
-
-  std::string path = "";
-  EXPECT_TRUE(s0->child_block_.get()->find("root", path));
-  EXPECT_EQ(path, "/path/to/file");
-
-  EXPECT_FALSE(s0->child_block_.get()->find("echo", path, 0));
-  EXPECT_TRUE(s1->child_block_.get()->find("echo", path, 0));
-  EXPECT_EQ(path, "echo");
+  EXPECT_TRUE(FindString("default"));
+  EXPECT_EQ(out_tokens_[1], "NotFoundHandler");
 }
-
