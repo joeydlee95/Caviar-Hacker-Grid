@@ -33,28 +33,15 @@ boost::system::error_code Webserver::port_valid() {
   return ec;
 }
 
-bool Webserver::ParseConfig() {
-  
-
-  return true;
-}
-
 bool Webserver::Init() {
-  Nginx::NginxConfig config;
-
-  if (!config_->find("port", config)) {
+  std::vector<std::string> portTokens = config_->find("port");
+  if (portTokens.size() != 2) {
     printf("Config does not specify a port\n");
     return false;
   }
 
   // port should be in the format of port ______;
-  port_ = std::atoi(config.tokens_[1].c_str());
-
-  boost::system::error_code ec = port_valid();
-  if(ec.value() != boost::system::errc::success) {
-    printf("Unable to bind port %d because %s\n", port_, ec.message().c_str());
-    return false;
-  }
+  port_ = std::atoi(portTokens[1].c_str());
 
   std::vector<std::shared_ptr<Nginx::NginxConfig> > statements = 
     config_->findAll("path");
@@ -65,7 +52,8 @@ bool Webserver::Init() {
       printf("Invalid path block %s\n", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
       return false;
     }
-    
+
+    // TODO: Replace this with the request handler. 
     std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
     //token[0] = path, token[1] = <URL>, token[3] = <handler type>, childblock = additional options
     WebserverOptions opt(statement, options);
@@ -75,7 +63,18 @@ bool Webserver::Init() {
     options_.insert(std::make_pair(statement->tokens_[1], opt));
   }
 
-  //Note that it is valid to have 0 path blocks. 
+  std::vector<std::string> defaultTokens = config_->find("default");  
+  if (portTokens.size() != 2) {
+    printf("Config does not specify a port\n");
+    return false;
+  }
+
+  boost::system::error_code ec = port_valid();
+  if(ec.value() != boost::system::errc::success) {
+    printf("Unable to bind port %d because %s\n", port_, ec.message().c_str());
+    return false;
+  }
+
   return true;
 }
 

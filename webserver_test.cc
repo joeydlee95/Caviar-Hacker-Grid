@@ -12,36 +12,26 @@ using ::testing::SetArgReferee;
 using ::testing::An;
 
 
-class MockConfigParser: public NginxConfigParser{
+/*
+class MockNginxConfig: public Nginx::NginxConfig{
 public:
-	MOCK_METHOD2(Parse,bool(const char* file_name, NginxConfig* config));
-	
-};
-
-class MockNginxConfig: public NginxConfig{
-public:
-  bool find(const std::string& key, std::string& value, std::size_t depth = 1) {
-    return mocked_find(key, value, depth);
-  }
-  bool find(const std::string& key, NginxConfig& value) {
+  bool find(const std::string& key, Nginx::NginxConfig& value) const {
     return mocked_find(key, value);
   }
-	MOCK_METHOD3(mocked_find,bool(const std::string& key, std::string& value, std::size_t depth));  
-  MOCK_METHOD2(mocked_find,bool(const std::string& key, NginxConfig& value));
+  bool td::vector<std::string> find(const std::string& key) const {
+    return mocked_find(key);
+  }
+	MOCK_METHOD2(mocked_find,bool(const std::string& key, Nginx::NginxConfig& value));  
+  MOCK_METHOD1(mocked_find,std::vector<std::string>(const std::string& key));
 };
 
 TEST(WebserverTest, ConfigurationFail) {
-  MockConfigParser mock_parser;
   MockNginxConfig mock_config;
 
   Webserver server(&mock_parser,&mock_config);
   std::string dummy_file = "dummy";
   
-  EXPECT_CALL(mock_parser, Parse(dummy_file.c_str(), _))
-    .WillOnce( 
-      Return(false)
-    );
-  EXPECT_CALL(mock_config, mocked_find("port", An<std::string &>(), An<std::size_t>())).Times(0);
+  EXPECT_CALL(mock_config, mocked_find("port", mock_config)).Times(0);
   EXPECT_FALSE(server.run_server(dummy_file.c_str()));
 }
 
@@ -73,4 +63,4 @@ TEST(WebserverOptionsTest, ToStringTest) {
   options->insert(std::make_pair("cheese", to_insert));
   WebserverOptions opt(conf, options);
   EXPECT_EQ(opt.ToString(), "cheese: is tasty \n");
-}
+}*/

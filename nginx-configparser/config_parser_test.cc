@@ -8,7 +8,7 @@
 TEST(NginxConfigParserTest, SimpleFileConfig) { //first is test case bracket, second is the test cases name
   Nginx::NginxConfig out_config;
 
-  bool success = Nginx::ParseFile("example_config", &out_config);
+  bool success = Nginx::ParseFile("nginx-configparser/example_config", &out_config);
   EXPECT_TRUE(success);
 }
 
