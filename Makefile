@@ -9,7 +9,7 @@ CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -pedantic -std=c++11 $(BOOST)
 CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest webserver_options server/http server/http_404 server/http_echo server/http_file filesystem/file_opener
 GCOV=config_parser.cc server.cc webserver.cc httpRequest.cc webserver_options.cc http.cc http_404.cc http_echo.cc http_file.cc file_opener.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
-TESTS=$(CLASSES:=_test.cc)
+TESTS=$(CLASSES:=_test)
 
 .PHONY: all clean test gcov
 all: webserver
@@ -36,8 +36,8 @@ libgmock.a:
 	g++ -isystem $(GTEST_DIR)/include -I$(GTEST_DIR) -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} -pthread -c ${GMOCK_DIR}/src/gmock-all.cc
 	ar -rv libgmock.a gtest-all.o gmock-all.o
 
-%_test.cc: %.cc libgtest.a libgmock.a
-	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread $(UTIL_CLASSES) $(TESTS) $(GMOCK_DIR)/src/gmock_main.cc libgmock.a $(BOOST) -o $(@:%.cc=%)
+%_test: %.cc libgtest.a libgmock.a
+	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread $(UTIL_CLASSES) $@.cc $(GMOCK_DIR)/src/gmock_main.cc libgmock.a $(BOOST) -o $(@:%.cc=%)
 
 
 gcov: test
