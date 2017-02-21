@@ -1,10 +1,26 @@
 #include "httpRequest.h"
 #include <string.h>
 #include <vector>
+#include <map>
+#include <utility>
 #include <cstdio>
-const std::string HttpRequest::GET = "GET";
+#include <memory>
 
-bool HttpRequest::processRequestLine(const std::string request){
+std::unique_ptr<Request> Request::Parse(const std::string& raw_request){
+	Request* req = new Request();
+
+	if(req->ParseRequest(raw_request)){
+		std::unique_ptr<Request> ret;
+		ret.reset(req);
+		return std::move(ret);
+	}
+	else{
+		return std::unique_ptr<Request>(nullptr);
+	}
+}
+
+
+bool Request::processRequestLine(const std::string& request){
 	//get the first CRLF which comes right after the request line
 	std::size_t end_request_ln_idx = request.find("\r\n");
 	if(end_request_ln_idx==std::string::npos){
@@ -34,7 +50,7 @@ bool HttpRequest::processRequestLine(const std::string request){
 	return true;
 }
 
-bool HttpRequest::processMessageBody(const std::string request){
+bool Request::processMessageBody(const std::string& request){
 	std::size_t body_start_inx = request.find("\r\n\r\n");
 	if(body_start_inx==std::string::npos){
 		printf("Invalid end of request");
@@ -45,7 +61,7 @@ bool HttpRequest::processMessageBody(const std::string request){
 
 }
 
-bool HttpRequest::processHeaders(const std::string request){
+bool Request::processHeaders(const std::string& request){
 	//the CRLF at the end of the request line
 	std::size_t start_idx = request.find("\r\n");
 	//the CRLFs preceding the start of the optional message body 
@@ -89,25 +105,9 @@ bool HttpRequest::processHeaders(const std::string request){
 }
 
 
-std::string HttpRequest::getMethod(){
-	return this->method_;
-}
-std::string HttpRequest::getResourcePath(){
-	return this->request_uri_;
-}
-std::string HttpRequest::getVersion(){
-	return this->version_;
-}
 
-std::string HttpRequest::getMessageBody(){
-	return this->message_body_;
-}
 
-std::string HttpRequest::getRawRequest(){
-	return this->raw_request_;
-}
-
-bool HttpRequest::Parse(const std::string request){
+bool Request::ParseRequest(const std::string& request){
 	if(!processRequestLine(request)){
 		return false;
 	}
@@ -118,17 +118,13 @@ bool HttpRequest::Parse(const std::string request){
 		return false;
 	}
 	this->raw_request_ = request;
+
+	for(const auto& a_mapping: this->header_fields_){
+		auto temp_pair = std::make_pair(a_mapping.first,a_mapping.second);
+		headers_.push_back(temp_pair);
+	}
+
 	return true;
 }
 
-void HttpRequest::Clear(){
-	this->raw_request_ = "";
-	this->request_line_ = "";
-	this->message_body_ = "";
-	this->method_ = "";
-	this->version_ = "";
-	this->request_uri_ = "";
-	this->header_fields_.clear();
-
-}
 

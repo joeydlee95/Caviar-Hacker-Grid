@@ -56,6 +56,6 @@ clean:
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 
-new_test: webserver_options.cc libgtest.a libgmock.a
-	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread $(UTIL_CLASSES) $(GMOCK_DIR)/src/gmock_main.cc webserver_options_test.cc libgmock.a $(BOOST) -o new_test
+new_test: server/httpRequest.cc libgtest.a libgmock.a
+	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/httpRequest.cc $(GMOCK_DIR)/src/gmock_main.cc server/httpRequest_test.cc libgmock.a $(BOOST) -o new_test
 	./new_test

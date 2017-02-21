@@ -2,103 +2,91 @@
 #include "httpRequest.h"
 #include <string>
 
-TEST(HttpRequestTest, SimpleTest) { 
-  HttpRequest parser;
-
+TEST(HttpRequestTest, SimpleParse) { 
+  
   std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org";
+  auto req_parsed = Request::Parse(request);
 
-  bool success = parser.Parse(request);
-
-  EXPECT_TRUE(success);
+  EXPECT_NE(req_parsed,nullptr);
 }
 
+TEST(HttpRequestTest, SimpleParseFail) { 
+  
+  std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\nHost: www.w3.org";
+  auto req_parsed = Request::Parse(request);
+
+  EXPECT_EQ(req_parsed,nullptr);
+}
+
+
 TEST(HttpRequestTest, HttpMethod) { 
-  HttpRequest parser;
-
   std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org";
+  auto req_parsed = Request::Parse(request);
 
-  parser.Parse(request);
-
-  EXPECT_EQ(parser.getMethod(),HttpRequest::GET);
+  EXPECT_EQ(req_parsed->method(),"GET");
 }
 
 TEST(HttpRequestTest, ResourceUri) { 
-  HttpRequest parser;
-
   std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org";
+  auto req_parsed = Request::Parse(request);
 
-  parser.Parse(request);
-
-  EXPECT_EQ(parser.getResourcePath(),"http://www.w3.org/pub/WWW/TheProject.html");
+  EXPECT_EQ(req_parsed->uri(),"http://www.w3.org/pub/WWW/TheProject.html");
 }
 
+
 TEST(HttpRequestTest, MessageBody) { 
-  HttpRequest parser;
+  
 
   std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org";
 
-  parser.Parse(request);
+  auto req_parsed = Request::Parse(request);
 
-  EXPECT_EQ(parser.getMessageBody(),"Host: www.w3.org");
+  EXPECT_EQ(req_parsed->body(),"Host: www.w3.org");
 }
 
 TEST(HttpRequestTest, MessageBodyWithHeaders) { 
-  HttpRequest parser;
-
   std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\nContent-Length: length\r\nContent-Length: length\r\n\r\nHost: www.w3.org";
 
-  parser.Parse(request);
-
-  EXPECT_EQ(parser.getMessageBody(),"Host: www.w3.org");
+  auto req_parsed = Request::Parse(request);
+  EXPECT_EQ(req_parsed->body(),"Host: www.w3.org");
 }
 
 
 TEST(HttpRequestTest, EmptyHeaderParse) { 
-  HttpRequest parser;
-
+  
   std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\n";
 
-  parser.Parse(request);
+  auto req_parsed = Request::Parse(request);
 
-  EXPECT_EQ(parser.header_fields_.size(),0);
+  EXPECT_EQ(req_parsed->headers().size(),0);
+}
+
+bool FindAndMatchHeader(const std::string header, const std::string value, const Request::Headers headers_vec){
+  bool found = false;
+  for(const auto& a_pair : headers_vec){
+    if(a_pair.first == header){ 
+      found = true;
+      EXPECT_EQ(a_pair.second,value);
+    }
+  }
+  return found;
 }
 
 TEST(HttpRequestTest, HeaderParse) { 
-  HttpRequest parser;
-
   std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\nAccept-Languages: en-us\r\nAccept-Encoding: gzip, deflate\r\nContent-Length: length\r\n\r\n";
 
-  parser.Parse(request);
+  auto req_parsed = Request::Parse(request);
+  auto headers_vec = req_parsed->headers();
 
-  EXPECT_EQ(parser.header_fields_["Content-Length"],"length");
-  EXPECT_EQ(parser.header_fields_["Accept-Languages"],"en-us");
-  EXPECT_EQ(parser.header_fields_["Accept-Encoding"],"gzip, deflate");
+  EXPECT_EQ(FindAndMatchHeader("Content-Length","length",headers_vec),true);
+  EXPECT_EQ(FindAndMatchHeader("Accept-Languages","en-us",headers_vec),true);
 
-}
-
-TEST(HttpRequestTest, ParserClear) { 
-  HttpRequest parser;
-
-  std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\nAccept-Languages: en-us\r\nAccept-Encoding: gzip, deflate\r\nContent-Length: length\r\n\r\n";
-
-  parser.Parse(request);
-
-  EXPECT_EQ(parser.header_fields_["Content-Length"],"length");
-  EXPECT_EQ(parser.header_fields_["Accept-Languages"],"en-us");
-
-  parser.Clear();
-  EXPECT_EQ(parser.header_fields_["Accept-Encoding"],"");
-  EXPECT_EQ(parser.getResourcePath(), "");
-  EXPECT_EQ(parser.getMethod(),"");
+  EXPECT_EQ(FindAndMatchHeader("Accept-Lang","en-us",headers_vec),false);
 
 }
 
-TEST(HttpRequestTest, GetRaw) { 
-  HttpRequest parser;
 
-  std::string request = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org";
 
-  bool success = parser.Parse(request);
 
-  EXPECT_EQ(parser.getRawRequest(),"GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1\r\n\r\nHost: www.w3.org");
-}
+
+
