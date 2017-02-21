@@ -6,6 +6,9 @@
 #include <vector>
 #include <sstream>
 
+
+//Note: webserver options may not exist later.
+/*
 TEST(WebServerOptionTest, TestInit) { 
   NginxConfigParser parser;
   NginxConfig out_config;
@@ -41,4 +44,4 @@ TEST(WebServerOptionTest, TestInit2) {
 
   //The Fornatting of ToString is strange with this input
   EXPECT_EQ(opt.ToString(),"echo: \n");
-}
+}*/
