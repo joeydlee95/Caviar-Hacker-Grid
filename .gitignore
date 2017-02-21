@@ -144,3 +144,6 @@ file_opener_test
 *.gcno
 *.gcda
 *.gcov
+
+# vs code
+.vscode/

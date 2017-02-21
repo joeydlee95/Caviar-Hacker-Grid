@@ -5,9 +5,6 @@
 #include <numeric>
 #include <boost/asio.hpp>
 
-
-
-
 std::string Webserver::ToString() const{
   std::string webserver_string;
   webserver_string.append("port: " + std::to_string(port_) + " \n");
@@ -36,20 +33,41 @@ boost::system::error_code Webserver::port_valid() {
   return ec;
 }
 
-bool Webserver::configure_server(const char* file_name) {
-  if (!parser_->Parse(file_name, config_)) {
-    printf("Invalid config file");
-    return false;
-  } 
-
-  std::string port_str = "";
-
-  if (!config_->find("port", port_str)) {
+bool Webserver::Init() {
+  std::vector<std::string> portTokens = config_->find("port");
+  if (portTokens.size() != 2) {
     printf("Config does not specify a port\n");
     return false;
   }
 
-  port_ = std::atoi(port_str.c_str());
+  // port should be in the format of port ______;
+  port_ = std::atoi(portTokens[1].c_str());
+
+  std::vector<std::shared_ptr<Nginx::NginxConfig> > statements = 
+    config_->findAll("path");
+
+  for (const auto& statement : statements) {
+    if(statement->tokens_.size() != 3) {
+      // lazy way to stringify the vector of strings
+      printf("Invalid path block %s\n", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
+      return false;
+    }
+
+    // TODO: Replace this with the request handler. 
+    std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
+    //token[0] = path, token[1] = <URL>, token[3] = <handler type>, childblock = additional options
+    WebserverOptions opt(statement, options);
+    printf("Options registered: %s\n", opt.ToString().c_str());
+    //pair: /static -> root nginx-configparser;
+    
+    options_.insert(std::make_pair(statement->tokens_[1], opt));
+  }
+
+  std::vector<std::string> defaultTokens = config_->find("default");  
+  if (portTokens.size() != 2) {
+    printf("Config does not specify a port\n");
+    return false;
+  }
 
   boost::system::error_code ec = port_valid();
   if(ec.value() != boost::system::errc::success) {
@@ -57,38 +75,10 @@ bool Webserver::configure_server(const char* file_name) {
     return false;
   }
 
-  std::vector<std::shared_ptr<NginxConfigStatement> > statements = 
-    config_->findAll("location");
-
-  for (const auto& statement : statements) {
-    // printf("%s", statement->ToString(0).c_str());
-    if(statement->tokens_.size() != 2) {
-      // lazy way to stringify the vector of strings
-      printf("Invalid config %s", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
-      return false;
-    }
-    
-    std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
-    // exampple of a statement
-    // location /static2 {
-    //      root nginx-configparser;
-    //  }
-    //token[0] = location, token[1] = /static, childblock = root nginx-configparser;
-
-    WebserverOptions opt(statement->child_block_, options);
-    printf("%s\n", opt.ToString().c_str());
-    //pair: /static -> root nginx-configparser;
-    
-    options_.insert(std::make_pair(statement->tokens_[1], opt));
-  }
   return true;
 }
 
-bool Webserver::run_server(const char* file_name) {
-  if(!configure_server(file_name))  {
-    // Server cannot run
-    return false;
-  }
+bool Webserver::run_server() {
   try {  
     boost::asio::io_service io_service;
     Server s(io_service, port_, &options_);
