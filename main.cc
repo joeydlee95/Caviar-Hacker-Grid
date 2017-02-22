@@ -7,9 +7,9 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  Nginx::NginxConfig config;
+  NginxConfig config;
 
-  if(!Nginx::ParseFile(argv[1], &config)) {
+  if(!ParseFile(argv[1], &config)) {
     printf("Syntax Error in NginxConfig %s", argv[1]);
     return 1;
   }

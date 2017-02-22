@@ -12,7 +12,7 @@ std::unique_ptr<Request> Request::Parse(const std::string& raw_request){
 	if(req->ParseRequest(raw_request)){
 		std::unique_ptr<Request> ret;
 		ret.reset(req);
-		return std::move(ret);
+		return ret;
 	}
 	else{
 		return std::unique_ptr<Request>(nullptr);

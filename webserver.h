@@ -13,17 +13,15 @@
 
 class Webserver {
 public:
-	Webserver(Nginx::NginxConfig* config) : config_(config) {
+	Webserver(NginxConfig* config) : config_(config) {
 	}
-	virtual bool ParseConfig();
 	virtual bool Init();
 	virtual bool run_server();
 	virtual boost::system::error_code port_valid();
 
 	std::string ToString() const;
 
-	Nginx::NginxConfig* config_;
-	std::map<std::string, WebserverOptions> options_;
+	NginxConfig* config_;
 	int port_ = 0;
 
 };

@@ -6,23 +6,23 @@
 #include <boost/algorithm/string/join.hpp>
 
 TEST(NginxConfigParserTest, SimpleFileConfig) { //first is test case bracket, second is the test cases name
-  Nginx::NginxConfig out_config;
+  NginxConfig out_config;
 
-  bool success = Nginx::ParseFile("nginx-configparser/example_config", &out_config);
+  bool success = ParseFile("nginx-configparser/example_config", &out_config);
   EXPECT_TRUE(success);
 }
 
 TEST(NginxConfigParserTest, NonexistentFileConfig) { //first is test case bracket, second is the test cases name
-  Nginx::NginxConfig out_config;
+  NginxConfig out_config;
 
-  bool success = Nginx::ParseFile("nonexistent_config", &out_config);
+  bool success = ParseFile("nonexistent_config", &out_config);
 
   EXPECT_FALSE(success);
 }
 
 
 TEST(NginxConfigTest, ToString) {
-  Nginx::NginxConfig statement;
+  NginxConfig statement;
   statement.tokens_.push_back("foo");
   statement.tokens_.push_back("bar");
 
@@ -33,7 +33,7 @@ class NginxStringConfigTest : public ::testing::Test { //fixture, lets you defin
 protected:
   bool ParseString(const std::string config_string) {
     std::stringstream config_stream(config_string);
-    return Nginx::ParseConfig(&config_stream, &out_config_);
+    return ParseConfig(&config_stream, &out_config_);
   }
 
   bool FindSubConfig(const std::string key) {
@@ -51,8 +51,8 @@ protected:
   }
 
   std::vector<std::string> out_tokens_;
-  Nginx::NginxConfig out_config_;
-  std::vector<std::shared_ptr<Nginx::NginxConfig> > out_configs_;
+  NginxConfig out_config_;
+  std::vector<std::shared_ptr<NginxConfig> > out_configs_;
 };
 
 

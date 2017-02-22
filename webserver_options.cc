@@ -18,7 +18,7 @@ std::string WebserverOptions::ToString() const{
   return options_string;
 }
 
-WebserverOptions::WebserverOptions(std::shared_ptr<Nginx::NginxConfig> const &statement, std::map<std::string, std::vector<std::string> >* options) {
+WebserverOptions::WebserverOptions(std::shared_ptr<NginxConfig> const &statement, std::map<std::string, std::vector<std::string> >* options) {
     for(const auto& s : statement->children_) {
       std::string key = s->tokens_[0];
       std::vector<std::string> vals = std::vector<std::string>(s->tokens_.begin() + 1, s->tokens_.end());

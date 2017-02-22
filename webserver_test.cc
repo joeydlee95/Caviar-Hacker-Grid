@@ -13,15 +13,15 @@ using ::testing::An;
 
 
 
-class MockNginxConfig : public Nginx::NginxConfig{
+class MockNginxConfig : public NginxConfig{
 public:
-  bool find(const std::string& key, Nginx::NginxConfig& value) const {
+  bool find(const std::string& key, NginxConfig& value) const {
     return mocked_find(key, value);
   }
   std::vector<std::string> find(const std::string& key) const {
     return mocked_find(key);
   }
-	MOCK_CONST_METHOD2(mocked_find,bool(const std::string& key, Nginx::NginxConfig& value));  
+	MOCK_CONST_METHOD2(mocked_find,bool(const std::string& key, NginxConfig& value));  
   MOCK_CONST_METHOD1(mocked_find,std::vector<std::string>(const std::string& key));
 };
 
