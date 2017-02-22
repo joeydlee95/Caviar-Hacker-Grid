@@ -19,7 +19,13 @@ public:
 	//config should contains the "root /path1;"
 	//uri_prefix in this case should be /static
 	virtual Status Init(const std::string& uri_prefix, const NginxConfig& config);
+
 	//error 500 not used yet
+	
+	//if the requested uri is : /static1/text_file.txt
+	//the prefix is /static1
+	//and the root path is /foo
+	//it will look for the file: /foo/text_file.txt
 	virtual Status HandleRequest(const Request& request, Response* response);
 
 	std::string getPrefix(){
