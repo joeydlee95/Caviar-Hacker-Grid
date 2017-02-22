@@ -6,7 +6,7 @@ GMOCK_DIR=googletest/googlemock
 GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include 
 GMOCK_FLAGS=-isystem $(GMOCK_DIR)/include
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -pedantic -std=c++11 $(BOOST)
-CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest webserver_options server/http server/http_404 server/http_echo server/http_file filesystem/file_opener
+CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest server/httpResponse webserver_options server/http filesystem/file_opener server/file_handler
 GCOV=config_parser.cc server.cc webserver.cc httpRequest.cc webserver_options.cc http.cc http_404.cc http_echo.cc http_file.cc file_opener.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
 TESTS=$(CLASSES:=_test)
@@ -59,20 +59,3 @@ clean:
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 
-
-
-#individual tests for the new interfaces, needs to be changed
-
-http_request_test: server/httpRequest.cc libgtest.a libgmock.a
-	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/httpRequest.cc $(GMOCK_DIR)/src/gmock_main.cc server/httpRequest_test.cc libgmock.a $(BOOST) -o http_request_test
-	./http_request_test
-
-http_response_test: server/httpResponse.cc libgtest.a libgmock.a
-	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/httpResponse.cc server/http.cc $(GMOCK_DIR)/src/gmock_main.cc server/httpResponse_test.cc libgmock.a $(BOOST) -o http_response_test
-	./http_response_test
-
-FILE_HANDLER_UTIL=server/http.cc server/httpRequest.cc server/httpResponse.cc nginx-configparser/config_parser.cc filesystem/file_opener.cc
-
-file_handler_test: server/file_handler.cc libgtest.a libgmock.a
-	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/file_handler.cc $(FILE_HANDLER_UTIL) $(GMOCK_DIR)/src/gmock_main.cc server/file_handler_test.cc libgmock.a $(BOOST) -o file_handler_test
-	./file_handler_test
