@@ -22,6 +22,9 @@ webserver.cc: webserver.h
 server/httpRequest.cc: server/httpRequest.h
 webserver_options.cc: webserver_options.h
 filesystem/file_opener.cc: filesystem/file_opener.h
+server/file_handler.cc: server/file_handler.h
+server/http.cc: server/http.h
+server/httpResponse.cc: server/httpResponse.h
 
 webserver: $(UTIL_CLASSES)
 	$(CXX) -o $@ $^ $(CXXFLAGS) main.cc
@@ -57,7 +60,19 @@ clean:
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 
 
-new_test: server/httpRequest.cc libgtest.a libgmock.a
-	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/httpRequest.cc $(GMOCK_DIR)/src/gmock_main.cc server/httpRequest_test.cc libgmock.a $(BOOST) -o new_test
-	./new_test
 
+#individual tests for the new interfaces, needs to be changed
+
+http_request_test: server/httpRequest.cc libgtest.a libgmock.a
+	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/httpRequest.cc $(GMOCK_DIR)/src/gmock_main.cc server/httpRequest_test.cc libgmock.a $(BOOST) -o http_request_test
+	./http_request_test
+
+http_response_test: server/httpResponse.cc libgtest.a libgmock.a
+	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/httpResponse.cc server/http.cc $(GMOCK_DIR)/src/gmock_main.cc server/httpResponse_test.cc libgmock.a $(BOOST) -o http_response_test
+	./http_response_test
+
+FILE_HANDLER_UTIL=server/http.cc server/httpRequest.cc server/httpResponse.cc nginx-configparser/config_parser.cc filesystem/file_opener.cc
+
+file_handler_test: server/file_handler.cc libgtest.a libgmock.a
+	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread server/file_handler.cc $(FILE_HANDLER_UTIL) $(GMOCK_DIR)/src/gmock_main.cc server/file_handler_test.cc libgmock.a $(BOOST) -o file_handler_test
+	./file_handler_test

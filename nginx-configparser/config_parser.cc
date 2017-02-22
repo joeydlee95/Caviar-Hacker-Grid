@@ -39,7 +39,7 @@ enum TokenParserState {
 const char* TokenTypeAsString(TokenType type);
 TokenType ParseToken(std::istream* input, std::string* value);
 
-std::string Nginx::NginxConfig::ToString(int tabLevel) const {
+std::string NginxConfig::ToString(int tabLevel) const {
   std::string serialized_config;
 
   for(const auto& child_block_ : children_) {
@@ -51,7 +51,7 @@ std::string Nginx::NginxConfig::ToString(int tabLevel) const {
 }
 
 
-std::string Nginx::NginxConfig::ToStringSubBlock(int tabLevel) const {
+std::string NginxConfig::ToStringSubBlock(int tabLevel) const {
   std::string serialized_config;
 
   for (int i = 0; i < tabLevel; ++i) {
@@ -85,7 +85,7 @@ std::string Nginx::NginxConfig::ToStringSubBlock(int tabLevel) const {
 }
 
 
-bool  Nginx::NginxConfig::find(const std::string& key, NginxConfig& value) const {
+bool  NginxConfig::find(const std::string& key, NginxConfig& value) const {
   // Finds the first instance of the string from the root level config. 
   // Expects a config token to be the second value, and returns that.
   for(const auto& child : children_) {
@@ -97,7 +97,7 @@ bool  Nginx::NginxConfig::find(const std::string& key, NginxConfig& value) const
   return false;
 }
 
-std::vector<std::string> Nginx::NginxConfig::find(const std::string& key) const {
+std::vector<std::string> NginxConfig::find(const std::string& key) const {
   // Finds the first instance of the string from the root level config. 
   // Expects a config token to be the second value, and returns that.
   std::vector<std::string> val;
@@ -109,7 +109,7 @@ std::vector<std::string> Nginx::NginxConfig::find(const std::string& key) const 
   }
   return val;
 }
-std::vector<std::shared_ptr<Nginx::NginxConfig> > Nginx::NginxConfig::findAll(const std::string& key) const {
+std::vector<std::shared_ptr<NginxConfig> > NginxConfig::findAll(const std::string& key) const {
   std::vector<std::shared_ptr<NginxConfig> > ret_config;
   for(const auto child : children_) {
     if (child.get()->tokens_[0].compare(key) == 0) {
@@ -215,7 +215,7 @@ TokenType ParseToken(std::istream* input, std::string* value) {
   return TOKEN_TYPE_EOF;
 }
 
-bool Nginx::ParseConfig(std::istream* config_file, NginxConfig* config) {
+bool ParseConfig(std::istream* config_file, NginxConfig* config) {
   std::stack<NginxConfig*> config_stack;
   config_stack.push(config);
   TokenType last_token_type = TOKEN_TYPE_START;
@@ -306,7 +306,7 @@ bool Nginx::ParseConfig(std::istream* config_file, NginxConfig* config) {
   return false;
 }
 
-bool Nginx::ParseFile(const std::string file_name, NginxConfig* config) {
+bool ParseFile(const std::string file_name, NginxConfig* config) {
   std::ifstream config_file;
   config_file.open(file_name);
   if (!config_file.good()) {
@@ -315,7 +315,7 @@ bool Nginx::ParseFile(const std::string file_name, NginxConfig* config) {
   }
 
   const bool return_value =
-      Nginx::ParseConfig(dynamic_cast<std::istream*>(&config_file), config);
+      ParseConfig(dynamic_cast<std::istream*>(&config_file), config);
   config_file.close();
   return return_value;
 }
