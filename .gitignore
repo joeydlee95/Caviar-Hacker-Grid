@@ -138,6 +138,8 @@ http_file_test
 http_404_test
 http_test
 file_opener_test
+file_handler_test
+httpResponse_test
 
 # gcc coverage testing tool files
 

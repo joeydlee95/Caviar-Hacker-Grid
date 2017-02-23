@@ -19,8 +19,8 @@
 
 using boost::asio::ip::tcp;
 
-Session::Session(tcp::socket socket, std::map<std::string, WebserverOptions>* options)
-  : socket_(std::move(socket)), options_(options) {
+Session::Session(tcp::socket socket)
+  : socket_(std::move(socket)) {
 }
 
 void Session::start() {
@@ -40,71 +40,15 @@ void Session::do_read() {
   socket_.async_read_some(boost::asio::buffer(&data_[0], data_.size()),
     [this, self](boost::system::error_code ec, std::size_t len) {
       if (!ec) {
-        bool match = false;
         printf("Incoming Data length %lu:\n", len);
-
-        // Todo: convert this to a unique_ptr
-        HttpRequest* request = new HttpRequest();
-        if(!request->Parse(data_)) {
-          printf("Invalid Request: Parse Error");
-          // return an error code. low priority bug (400)
-          builder = new http::HTTPResponseBuilder(new http::HTTPResponse());
-          builder->set_status_code(400);
-          builder->set_reason_phrase(http::reason_phrase::getDefault(400));
-          builder->set_content_type(http::mime_type::CONTENT_TYPE_TEXT_HTML);
-          printf("404: \n%s\n", builder->getResult()->ToString().c_str());
-        }
-        else {
-          std::string resource_path = request->getResourcePath();
-          for(const auto & option : *options_) {
-            
-            // TODO: fix bug with subdirectories. This code doesn't find those properly, instead it finds the first matching prefix on the config
-            auto res = std::mismatch(option.first.begin(), option.first.end(), resource_path.begin());
-            if(res.first == option.first.end()) {
-              match = true;
-              
-              std::map<std::string, std::vector<std::string> >::iterator i;
-              if((i = option.second.options_->find("echo")) != option.second.options_->end()) {
-                //return an echo response
-                
-                builder = new http::HTTPResponseBuilderEcho(new http::HTTPResponse(), data_);
-                printf("echoing: \n%s\n", builder->getResult()->ToString().c_str());
-              }
-              else if((i = option.second.options_->find("root")) != option.second.options_->end()) {
-                std::string tail = resource_path.substr(option.first.size());
-                printf("Serve file from %s\n", (std::accumulate(i->second.begin(), i->second.end(), std::string(""))+tail).c_str());
-                builder = new http::HTTPResponseBuilderFile(new http::HTTPResponse(), std::accumulate(i->second.begin(), i->second.end(), std::string(""))+tail);
-              }
-              else {
-                // invalid config
-                printf("Unexpected lack of serving options\n"); 
-                builder = new http::HTTPResponseBuilder404(new http::HTTPResponse());
-                builder->set_status_code(500);
-                builder->set_reason_phrase(http::reason_phrase::getDefault(500));
-                //return 500
-              }
-              break;
-
-            }
-          }
-
-          if(!match) {
-            //send 404
-            printf("path not found in config!\n");
-            builder = new http::HTTPResponseBuilder404(new http::HTTPResponse());
-          }
-
-
-        }
-        do_write(builder);
-        delete request;
+        do_write();
       }
   });
 }
 
-void Session::do_write(http::HTTPResponseBuilder* builder) {
+void Session::do_write() {
   auto self(shared_from_this());
-  std::string builder_string = builder->getResult()->ToString();
+  std::string builder_string = "Temporary";
   boost::asio::async_write(socket_, boost::asio::buffer(&builder_string[0], builder_string.length()),
     [this, self](boost::system::error_code ec, std::size_t len) {
   });
@@ -115,20 +59,20 @@ void Session::do_write(http::HTTPResponseBuilder* builder) {
 
 
 
-Server::Server(boost::asio::io_service& io_service, int port, std::map<std::string, WebserverOptions>* options)
+Server::Server(boost::asio::io_service& io_service, int port)
   : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
   socket_(io_service) {
-  do_accept(options);
+  do_accept();
 }
 
-void Server::do_accept(std::map<std::string, WebserverOptions>* options)
+void Server::do_accept()
 {
   acceptor_.async_accept(socket_,
-  [this, options](boost::system::error_code ec) {
+  [this](boost::system::error_code ec) {
     if (!ec) {
-        std::make_shared<Session>(std::move(socket_), options)->start();
+        std::make_shared<Session>(std::move(socket_))->start();
     }
 
-    do_accept(options);
+    do_accept();
   });
 }

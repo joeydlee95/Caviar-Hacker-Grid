@@ -6,7 +6,7 @@ GMOCK_DIR=googletest/googlemock
 GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include 
 GMOCK_FLAGS=-isystem $(GMOCK_DIR)/include
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -pedantic -std=c++11 $(BOOST)
-CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest webserver_options server/http server/http_404 server/http_echo server/http_file filesystem/file_opener
+CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest server/httpResponse webserver_options server/http filesystem/file_opener server/file_handler
 GCOV=config_parser.cc server.cc webserver.cc httpRequest.cc webserver_options.cc http.cc http_404.cc http_echo.cc http_file.cc file_opener.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
 TESTS=$(CLASSES:=_test)
@@ -22,6 +22,9 @@ webserver.cc: webserver.h
 server/httpRequest.cc: server/httpRequest.h
 webserver_options.cc: webserver_options.h
 filesystem/file_opener.cc: filesystem/file_opener.h
+server/file_handler.cc: server/file_handler.h
+server/http.cc: server/http.h
+server/httpResponse.cc: server/httpResponse.h
 
 webserver: $(UTIL_CLASSES)
 	$(CXX) -o $@ $^ $(CXXFLAGS) main.cc
@@ -56,6 +59,3 @@ clean:
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 
-new_test: webserver_options.cc libgtest.a libgmock.a
-	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread $(UTIL_CLASSES) $(GMOCK_DIR)/src/gmock_main.cc webserver_options_test.cc libgmock.a $(BOOST) -o new_test
-	./new_test

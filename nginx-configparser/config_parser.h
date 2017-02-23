@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace Nginx {
+
 
   // The parsed representation of the entire config.
   class NginxConfig {
@@ -35,7 +35,7 @@ namespace Nginx {
   bool ParseFile(const std::string file_name, NginxConfig* config);
   
   
-}
+
 
 #endif
 

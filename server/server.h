@@ -21,28 +21,26 @@ class Session
   : public std::enable_shared_from_this<Session>
 {
 public:
-  Session(tcp::socket socket, std::map<std::string, WebserverOptions>* options);
+  Session(tcp::socket socket);
   void start();
 
 private:
   void do_read();
 
-  void do_write(http::HTTPResponseBuilder* builder);
+  void do_write();
 
   tcp::socket socket_;
   enum { max_length = 1024 };
   std::string data_;
-  std::map<std::string, WebserverOptions>* options_;
-  http::HTTPResponseBuilder* builder;
 };
 
 class Server 
 {
 public:
-  Server(boost::asio::io_service& io_service, int port, std::map<std::string, WebserverOptions>* options);
+  Server(boost::asio::io_service& io_service, int port);
 
 private:
-  void do_accept(std::map<std::string, WebserverOptions>* options);
+  void do_accept();
   tcp::acceptor acceptor_;
   tcp::socket socket_;
 };

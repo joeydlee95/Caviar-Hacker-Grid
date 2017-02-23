@@ -8,13 +8,6 @@
 std::string Webserver::ToString() const{
   std::string webserver_string;
   webserver_string.append("port: " + std::to_string(port_) + " \n");
-  for(const auto& option : options_) {
-    webserver_string.append("key: ");
-    webserver_string.append(option.first);
-    webserver_string.append(", value: ");
-    webserver_string.append(option.second.ToString());
-    webserver_string.append("\n");
-  }
   return webserver_string;
 }
 
@@ -43,7 +36,7 @@ bool Webserver::Init() {
   // port should be in the format of port ______;
   port_ = std::atoi(portTokens[1].c_str());
 
-  std::vector<std::shared_ptr<Nginx::NginxConfig> > statements = 
+  std::vector<std::shared_ptr<NginxConfig> > statements = 
     config_->findAll("path");
 
   for (const auto& statement : statements) {
@@ -54,13 +47,13 @@ bool Webserver::Init() {
     }
 
     // TODO: Replace this with the request handler. 
-    std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
-    //token[0] = path, token[1] = <URL>, token[3] = <handler type>, childblock = additional options
-    WebserverOptions opt(statement, options);
-    printf("Options registered: %s\n", opt.ToString().c_str());
-    //pair: /static -> root nginx-configparser;
+    // std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
+    // //token[0] = path, token[1] = <URL>, token[3] = <handler type>, childblock = additional options
+    // WebserverOptions opt(statement, options);
+    // printf("Options registered: %s\n", opt.ToString().c_str());
+    // //pair: /static -> root nginx-configparser;
     
-    options_.insert(std::make_pair(statement->tokens_[1], opt));
+    // options_.insert(std::make_pair(statement->tokens_[1], opt));
   }
 
   std::vector<std::string> defaultTokens = config_->find("default");  
@@ -81,7 +74,7 @@ bool Webserver::Init() {
 bool Webserver::run_server() {
   try {  
     boost::asio::io_service io_service;
-    Server s(io_service, port_, &options_);
+    Server s(io_service, port_);
     printf("Running server on port %d...\n", port_);
     io_service.run();
   } 
