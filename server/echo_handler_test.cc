@@ -14,10 +14,8 @@ classMockNginxConfig : public NginxConfig{
 */
 
 TEST(EchoHandlerTest, BasicTest) {
-  std::string raw_request = "GET /echo HTTP/1.1\r\nHost: localhost";
+  std::string raw_request= "GET /echo HTTP/1.1\r\nHost: localhost:3000\r\n\r\n";
   auto req = Request::Parse(raw_request);
-  //Request req;
-  //req.Parse(raw_request);
   Response res;
   EchoHandler eh;
   auto handler_status = eh.HandleRequest(*req, &res);  
