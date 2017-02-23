@@ -10,7 +10,7 @@ RequestHandler::Status StaticFileHandler::Init(const std::string& uri_prefix, co
 	// root /path1
 	//check if such a line exists
 	std::vector<std::string> root_config_tokens = config.find("root");
-	if( root_config_tokens.size() < 2 ){
+	if (root_config_tokens.size() < 2){
 		printf("StaticfileHandler.Init: Invalid config:\n%s", config.ToString().c_str() );
 		return INVALID_CONFIG;
 	}
@@ -23,7 +23,7 @@ RequestHandler::Status StaticFileHandler::HandleRequest(const Request& request, 
 	std::size_t prefix_pos = req_uri.find(this->m_uri_prefix_);
 
 	//the server should check for this first, this is just for safety
-	if( prefix_pos == std::string::npos || prefix_pos != 0 ){
+	if (prefix_pos == std::string::npos || prefix_pos != 0){
 		printf("StaticfileHandler.HandleRequest: Bad request");
 		response->SetStatus(Response::BAD_REQUEST);
 		response->AddHeader("Content-Type",http::mime_type::ContentTypeAsString(http::mime_type::CONTENT_TYPE_TEXT_HTML));
@@ -33,7 +33,7 @@ RequestHandler::Status StaticFileHandler::HandleRequest(const Request& request, 
 	std::string uri_no_prefix = req_uri.substr(this->m_uri_prefix_.size());
 	std::string actual_uri = this->m_root_path_ + uri_no_prefix;
 
-	if( !FileIO::FileExists(actual_uri) ){
+	if (!FileIO::FileExists(actual_uri)){
 		printf("StaticfileHandler.HandleRequest: File not found:%s\n",actual_uri.c_str());
 		response->SetStatus(Response::NOT_FOUND);
 		response->AddHeader("Content-Type",http::mime_type::ContentTypeAsString(http::mime_type::CONTENT_TYPE_TEXT_HTML));
@@ -44,7 +44,7 @@ RequestHandler::Status StaticFileHandler::HandleRequest(const Request& request, 
 
 	// find the file extension, set the content type based on this.
     std::size_t index_of_extension = FileIO::FileExtensionLocation(actual_uri);
-    if( index_of_extension == std::string::npos ) {
+    if (index_of_extension == std::string::npos){
     	response->AddHeader("Content-Type",http::mime_type::ContentTypeAsString(http::mime_type::CONTENT_TYPE_APP_OCTET_STREAM));
     }
     else {
