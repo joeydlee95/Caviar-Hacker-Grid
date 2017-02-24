@@ -4,27 +4,27 @@
 #include <cstdio>
 #include "http.h"
 
-RequestHandler::Status StaticFileHandler::Init(const std::string& uri_prefix, const NginxConfig& config){
+RequestHandler::Status StaticHandler::Init(const std::string& uri_prefix, const NginxConfig& config){
 	this->m_uri_prefix_ = uri_prefix;
 	//assume the config argument has something like
 	// root /path1
 	//check if such a line exists
 	std::vector<std::string> root_config_tokens = config.find("root");
 	if (root_config_tokens.size() < 2){
-		printf("StaticfileHandler.Init: Invalid config:\n%s", config.ToString().c_str() );
+		printf("StaticHandler.Init: Invalid config:\n%s", config.ToString().c_str() );
 		return INVALID_CONFIG;
 	}
 	this->m_root_path_ = root_config_tokens[1];
 	return OK;
 }
 
-RequestHandler::Status StaticFileHandler::HandleRequest(const Request& request, Response* response){
+RequestHandler::Status StaticHandler::HandleRequest(const Request& request, Response* response){
 	std::string req_uri = request.uri();
 	std::size_t prefix_pos = req_uri.find(this->m_uri_prefix_);
 
 	//the server should check for this first, this is just for safety
 	if (prefix_pos == std::string::npos || prefix_pos != 0){
-		printf("StaticfileHandler.HandleRequest: Bad request");
+		printf("StaticHandler.HandleRequest: Bad request");
 		response->SetStatus(Response::BAD_REQUEST);
 		response->AddHeader("Content-Type",http::mime_type::ContentTypeAsString(http::mime_type::CONTENT_TYPE_TEXT_HTML));
 		return BAD_REQUEST;
@@ -34,7 +34,7 @@ RequestHandler::Status StaticFileHandler::HandleRequest(const Request& request, 
 	std::string actual_uri = this->m_root_path_ + uri_no_prefix;
 
 	if (!FileIO::FileExists(actual_uri)){
-		printf("StaticfileHandler.HandleRequest: File not found:%s\n",actual_uri.c_str());
+		printf("StaticHandler.HandleRequest: File not found:%s\n",actual_uri.c_str());
 		response->SetStatus(Response::NOT_FOUND);
 		response->AddHeader("Content-Type",http::mime_type::ContentTypeAsString(http::mime_type::CONTENT_TYPE_TEXT_HTML));
 		return FILE_NOT_FOUND;

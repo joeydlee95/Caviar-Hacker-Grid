@@ -8,7 +8,7 @@
 #include "request_handler.h"
 #include "../filesystem/file_opener.h"
 
-class StaticFileHandler: public RequestHandler{
+class StaticHandler: public RequestHandler{
 
 public:
 	//will only use the root path for now
@@ -40,7 +40,7 @@ private:
 
 };
 
-REGISTER_REQUEST_HANDLER(StaticFileHandler);
+REGISTER_REQUEST_HANDLER(StaticHandler);
 
 
 #endif

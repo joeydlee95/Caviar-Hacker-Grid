@@ -29,7 +29,7 @@ private:
 	std::map<std::string,RequestHandler*> RequestHandlers_;
 
 	RequestHandler* DefaultHandler_;
-	bool AddHandler(std::string path, std::string HandlerName);
+	bool AddHandler(std::string path, std::string HandlerName, NginxConfig* const config);
 
 };
 

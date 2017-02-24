@@ -14,18 +14,22 @@ std::string Webserver::ToString() const {
   return webserver_string;
 }
 
-bool Webserver::AddHandler(std::string path, std::string HandlerName) {
+bool Webserver::AddHandler(std::string path, std::string HandlerName, NginxConfig* config) {
   auto handler = RequestHandler::CreateByName(HandlerName.c_str());
-  if(handler != nullptr) {
-    printf("Registered Handler %s\n", HandlerName.c_str());
-    RequestHandlers_.insert(std::make_pair(path, handler));
-    return true;
-  }
-  else {
-    //We just ignore the block.
+  if(handler == nullptr) {
     printf("Invalid Handler %s\n", HandlerName.c_str());
     return false;
   }
+  
+  if(!handler->Init(path, *config)) {
+    printf("Error initializing Handler %s\n", HandlerName.c_str());
+    return false;
+  }
+  
+  printf("Registered Handler %s\n", HandlerName.c_str());
+  RequestHandlers_.insert(std::make_pair(path, handler));
+  return true;
+
 }
 boost::system::error_code Webserver::port_valid() {
   // Based off of: 
@@ -61,7 +65,7 @@ bool Webserver::Init() {
       printf("Invalid path block %s\n", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
       return false;
     }
-    AddHandler(statement->tokens_[1], statement->tokens_[2]);
+    AddHandler(statement->tokens_[1], statement->tokens_[2], statement.get());
   }
 
   std::vector<std::string> defaultTokens = config_->find("default");  
