@@ -21,11 +21,12 @@ bool Webserver::AddHandler(std::string path, std::string HandlerName, NginxConfi
     return false;
   }
   
-  if(!handler->Init(path, *config)) {
-    printf("Error initializing Handler %s\n", HandlerName.c_str());
+  RequestHandler::Status s = handler->Init(path, *config);
+  if(s == RequestHandler::INVALID_CONFIG) {
+    printf("Error initializing Handler %s due to invalid config %s\n", HandlerName.c_str(), config->ToString().c_str());
     return false;
   }
-  
+
   printf("Registered Handler %s\n", HandlerName.c_str());
   RequestHandlers_.insert(std::make_pair(path, handler));
   return true;
