@@ -13,9 +13,8 @@
 #include "../webserver.h"
 #include "server.h"
 #include "http.h"
-#include "http_echo.h"
-#include "http_404.h"
-#include "http_file.h"
+#include "httpRequest.h"
+#include "httpResponse.h"
 
 using boost::asio::ip::tcp;
 
@@ -41,6 +40,8 @@ void Session::do_read() {
     [this, self](boost::system::error_code ec, std::size_t len) {
       if (!ec) {
         printf("Incoming Data length %lu:\n", len);
+        // std::unique_ptr<Request> req = Request::Parse(data_);
+
         do_write();
       }
   });

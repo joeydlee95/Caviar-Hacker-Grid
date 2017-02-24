@@ -11,7 +11,6 @@
 #include <boost/asio.hpp>
 #include "httpRequest.h"
 #include <map>
-#include "../webserver_options.h"
 #include "http.h"
 
 using boost::asio::ip::tcp;
@@ -30,7 +29,6 @@ private:
   void do_write();
 
   tcp::socket socket_;
-  enum { max_length = 1024 };
   std::string data_;
 };
 

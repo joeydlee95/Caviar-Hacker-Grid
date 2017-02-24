@@ -40,4 +40,8 @@ private:
 
 };
 
+REGISTER_REQUEST_HANDLER(StaticFileHandler);
+
+
 #endif
+

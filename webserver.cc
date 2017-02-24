@@ -1,16 +1,32 @@
 #include "webserver.h"
-#include "webserver_options.h"
 #include <utility>
 #include <map>
 #include <numeric>
 #include <boost/asio.hpp>
+#include "server/request_handler.h"
 
-std::string Webserver::ToString() const{
+std::string Webserver::ToString() const {
   std::string webserver_string;
   webserver_string.append("port: " + std::to_string(port_) + " \n");
+  for(auto const& handler : RequestHandlers_) {
+    webserver_string.append("Handler registered: " + handler.first + "\n");
+  }
   return webserver_string;
 }
 
+bool Webserver::AddHandler(std::string path, std::string HandlerName) {
+  auto handler = RequestHandler::CreateByName(HandlerName.c_str());
+  if(handler != nullptr) {
+    printf("Registered Handler %s\n", HandlerName.c_str());
+    RequestHandlers_.insert(std::make_pair(path, handler));
+    return true;
+  }
+  else {
+    //We just ignore the block.
+    printf("Invalid Handler %s\n", HandlerName.c_str());
+    return false;
+  }
+}
 boost::system::error_code Webserver::port_valid() {
   // Based off of: 
   // http://stackoverflow.com/questions/33358321/using-c-and-boost-or-not-to-check-if-a-specific-port-is-being-used
@@ -45,20 +61,18 @@ bool Webserver::Init() {
       printf("Invalid path block %s\n", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
       return false;
     }
-
-    // TODO: Replace this with the request handler. 
-    // std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
-    // //token[0] = path, token[1] = <URL>, token[3] = <handler type>, childblock = additional options
-    // WebserverOptions opt(statement, options);
-    // printf("Options registered: %s\n", opt.ToString().c_str());
-    // //pair: /static -> root nginx-configparser;
-    
-    // options_.insert(std::make_pair(statement->tokens_[1], opt));
+    AddHandler(statement->tokens_[1], statement->tokens_[2]);
   }
 
   std::vector<std::string> defaultTokens = config_->find("default");  
-  if (portTokens.size() != 2) {
-    printf("Config does not specify a port\n");
+  if (defaultTokens.size() != 2) {
+    printf("Config does not specify a default handler\n");
+    return false;
+  }
+
+  DefaultHandler_ = RequestHandler::CreateByName(defaultTokens[1].c_str());
+  if(DefaultHandler_ == nullptr) {
+    printf("Default Handler Invalid: %s specified, not found\n", defaultTokens[1].c_str());
     return false;
   }
 

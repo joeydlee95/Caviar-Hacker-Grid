@@ -58,4 +58,3 @@ RequestHandler::Status StaticFileHandler::HandleRequest(const Request& request, 
 
     return OK;
 }
-
