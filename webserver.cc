@@ -5,10 +5,11 @@
 #include <boost/asio.hpp>
 #include "server/request_handler.h"
 
+
 std::string Webserver::ToString() const {
   std::string webserver_string;
   webserver_string.append("port: " + std::to_string(port_) + " \n");
-  for(auto const& handler : RequestHandlers_) {
+  for(auto const& handler : *HandlerMapping_.RequestHandlers) {
     webserver_string.append("Handler registered: " + handler.first + "\n");
   }
   return webserver_string;
@@ -28,10 +29,11 @@ bool Webserver::AddHandler(std::string path, std::string HandlerName, NginxConfi
   }
 
   printf("Registered Handler %s\n", HandlerName.c_str());
-  RequestHandlers_.insert(std::make_pair(path, handler));
+  HandlerMapping_.RequestHandlers->insert(std::make_pair(path, handler));
   return true;
 
 }
+
 boost::system::error_code Webserver::port_valid() {
   // Based off of: 
   // http://stackoverflow.com/questions/33358321/using-c-and-boost-or-not-to-check-if-a-specific-port-is-being-used
@@ -57,6 +59,8 @@ bool Webserver::Init() {
   // port should be in the format of port ______;
   port_ = std::atoi(portTokens[1].c_str());
 
+  HandlerMapping_.RequestHandlers = new HandlerMap;
+
   std::vector<std::shared_ptr<NginxConfig> > statements = 
     config_->findAll("path");
 
@@ -75,8 +79,8 @@ bool Webserver::Init() {
     return false;
   }
 
-  DefaultHandler_ = RequestHandler::CreateByName(defaultTokens[1].c_str());
-  if(DefaultHandler_ == nullptr) {
+  HandlerMapping_.DefaultHandler = RequestHandler::CreateByName(defaultTokens[1].c_str());
+  if(HandlerMapping_.DefaultHandler == nullptr) {
     printf("Default Handler Invalid: %s specified, not found\n", defaultTokens[1].c_str());
     return false;
   }
@@ -93,7 +97,7 @@ bool Webserver::Init() {
 bool Webserver::run_server() {
   try {  
     boost::asio::io_service io_service;
-    Server s(io_service, port_);
+    Server s(io_service, port_, &HandlerMapping_);
     printf("Running server on port %d...\n", port_);
     io_service.run();
   } 

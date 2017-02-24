@@ -11,6 +11,8 @@
 
 
 
+
+
 class Webserver {
 public:
 	Webserver(NginxConfig* config) : config_(config) {
@@ -25,10 +27,8 @@ public:
 	NginxConfig* config_;
 	int port_ = 0;
 private:
-	// std::map<std::string, RequestHandler*> RequestHandlers_;
-	std::map<std::string,RequestHandler*> RequestHandlers_;
 
-	RequestHandler* DefaultHandler_;
+	HandlerConfiguration HandlerMapping_;
 	bool AddHandler(std::string path, std::string HandlerName, NginxConfig* const config);
 
 };

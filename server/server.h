@@ -12,15 +12,15 @@
 #include "httpRequest.h"
 #include <map>
 #include "http.h"
+#include "request_handler.h"
 
 using boost::asio::ip::tcp;
-
 
 class Session
   : public std::enable_shared_from_this<Session>
 {
 public:
-  Session(tcp::socket socket);
+  Session(tcp::socket socket, HandlerConfiguration* handler);
   void start();
 
 private:
@@ -30,15 +30,16 @@ private:
 
   tcp::socket socket_;
   std::string data_;
+  HandlerConfiguration* handler_;
 };
 
 class Server 
 {
 public:
-  Server(boost::asio::io_service& io_service, int port);
+  Server(boost::asio::io_service& io_service, int port, HandlerConfiguration* handler);
 
 private:
-  void do_accept();
+  void do_accept(HandlerConfiguration* handler);
   tcp::acceptor acceptor_;
   tcp::socket socket_;
 };

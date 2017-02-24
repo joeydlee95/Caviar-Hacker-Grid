@@ -15,11 +15,13 @@
 #include "http.h"
 #include "httpRequest.h"
 #include "httpResponse.h"
+#include "request_handler.h"
 
 using boost::asio::ip::tcp;
 
-Session::Session(tcp::socket socket)
-  : socket_(std::move(socket)) {
+Session::Session(tcp::socket socket, HandlerConfiguration* handler)
+  : socket_(std::move(socket)),
+  handler_(handler) {
 }
 
 void Session::start() {
@@ -42,6 +44,7 @@ void Session::do_read() {
         printf("Incoming Data length %lu:\n", len);
         // std::unique_ptr<Request> req = Request::Parse(data_);
 
+        HandlerConfiguration h = *handler_;
         do_write();
       }
   });
@@ -60,20 +63,21 @@ void Session::do_write() {
 
 
 
-Server::Server(boost::asio::io_service& io_service, int port)
+Server::Server(boost::asio::io_service& io_service, int port, HandlerConfiguration* handler)
   : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-  socket_(io_service) {
-  do_accept();
+  socket_(io_service){
+  do_accept(handler);
 }
 
-void Server::do_accept()
+void Server::do_accept(HandlerConfiguration* handler)
 {
   acceptor_.async_accept(socket_,
-  [this](boost::system::error_code ec) {
+  [this, handler](boost::system::error_code ec) {
     if (!ec) {
-        std::make_shared<Session>(std::move(socket_))->start();
+        std::make_shared<Session>(std::move(socket_), handler)->start();
     }
 
-    do_accept();
+    // Continue accepting new connections
+    do_accept(handler);
   });
 }

@@ -9,3 +9,8 @@ RequestHandler* RequestHandler::CreateByName(const char* type) {
   }
   return (*type_and_builder->second)();
 }
+
+HandlerConfiguration::~HandlerConfiguration() {
+  delete RequestHandlers;
+  // delete DefaultHandler;
+}

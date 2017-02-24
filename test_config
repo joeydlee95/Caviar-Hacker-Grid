@@ -4,7 +4,7 @@ path / StaticHandler {
       root /foo/bar;
 }
 
-#path /echo EchoHandler {}
+path /echo EchoHandler {}
 
 # Default response handler if no handlers match.
 default StaticHandler {}

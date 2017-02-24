@@ -55,5 +55,14 @@ class RequestHandlerRegisterer {
 #define REGISTER_REQUEST_HANDLER(ClassName) \
   static RequestHandlerRegisterer<ClassName> ClassName##__registerer(#ClassName)
 
+
+typedef std::map<std::string,RequestHandler*> HandlerMap;
+
+struct HandlerConfiguration {
+	 HandlerMap* RequestHandlers;
+	 RequestHandler* DefaultHandler;
+   ~HandlerConfiguration();
+};
+
 #endif
 
