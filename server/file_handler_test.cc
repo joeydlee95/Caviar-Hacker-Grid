@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "file_handler.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
 #include "../nginx-configparser/config_parser.h"
 #include <vector>
 using ::testing::Return;

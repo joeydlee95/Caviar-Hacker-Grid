@@ -12,9 +12,9 @@
 #include <boost/asio.hpp>
 #include "../webserver.h"
 #include "server.h"
-#include "http.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
+#include "../http/http.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
 #include "request_handler.h"
 
 using boost::asio::ip::tcp;

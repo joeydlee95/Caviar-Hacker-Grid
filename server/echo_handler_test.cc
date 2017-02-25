@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
 #include "echo_handler.h"
 #include "../nginx-configparser/config_parser.h"
 #include <vector>

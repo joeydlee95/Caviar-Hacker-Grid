@@ -1,7 +1,7 @@
 #include "echo_handler.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
-#include "http.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
+#include "../http/http.h"
 #include <string>
 
 RequestHandler::Status EchoHandler::Init(const std::string& uri_prefix,

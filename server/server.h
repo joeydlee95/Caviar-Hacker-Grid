@@ -9,9 +9,9 @@
 #include <vector>
 #include <string>
 #include <boost/asio.hpp>
-#include "httpRequest.h"
+#include "../http/httpRequest.h"
 #include <map>
-#include "http.h"
+#include "../http/http.h"
 #include "request_handler.h"
 
 using boost::asio::ip::tcp;

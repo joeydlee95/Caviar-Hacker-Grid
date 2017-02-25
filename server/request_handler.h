@@ -3,8 +3,8 @@
 #include <string>
 #include <map>
 #include "../nginx-configparser/config_parser.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
 // Represents the parent of all request handlers. Implementations should expect to
 // be long lived and created at server constrution.
 class RequestHandler {

@@ -2,7 +2,7 @@
 #include <vector>
 #include <string.h>
 #include <cstdio>
-#include "http.h"
+#include "../http/http.h"
 #include "not_found_handler.h"
 
 RequestHandler::Status StaticHandler::Init(const std::string& uri_prefix, const NginxConfig& config){
