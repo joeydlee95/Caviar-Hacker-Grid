@@ -54,9 +54,9 @@ integration: webserver
 	python integration_test.py
 
 clean:
-	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
-	rm -rf nginx-configparser/*.a nginx-configparser/*.gcda nginx-configparser/*.gcno nginx-configparser/*.gcov
-	rm -rf httpRequest_test webserver_options_test webserver_test server/httpRequest_test server/http_404_test server/http_echo_test server/http_file_test server/http_test server/server_test filesystem/file_opener_test nginx-configparser/config_parser_test
-	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
-	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
-
+	find . -type f -iname \*.o -delete
+	find . -type f -iname \*.a -delete
+	find . -type f -iname \*.gcda -delete
+	find . -type f -iname \*.gcno -delete
+	find . -type f -iname \*.gcov -delete
+	rm -rf $(CLASSES) $(TESTS) webserver *.dSYM 
