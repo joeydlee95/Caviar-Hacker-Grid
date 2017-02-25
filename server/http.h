@@ -75,77 +75,7 @@ namespace http {
     public:
       std::map<std::string, std::string> fields_;
   };
-
-  class HTTPResponse {
-    public:
-      HTTPResponse();
-      std::string ToString();
-
-      http::reason_phrase reason_phrase_;
-      http::status_code status_code_;
-      http::mime_type mime_type_;
-      http::http_headers http_headers_;
-      std::string http_version_ = "HTTP/1.1";
-
-      // TODO: Make this a data stream
-      std::string body_;
-      
-      const char* line_break = "\r\n";
-      
-  };
-
-
-  class HTTPResponseBuilder {
-    // API based off of: 
-    // https://microsoft.github.io/cpprestsdk/classweb_1_1http_1_1http__response.html#a1272e1a1e855c1433abd31a76ef3be97
-    public:       
-      HTTPResponseBuilder(HTTPResponse* res) : response_(res) {
-
-      };
-
-      http::status_code& status_code() const;
-      bool set_status_code(int code);
-
-      http::reason_phrase& reason_phrase() const;
-      void set_reason_phrase(std::string phrase);
-
-      http::http_headers& headers();
-      http::http_headers& headers() const;
-
-      void set_length(std::size_t length);
-      void set_content_type(http::mime_type::ContentType type);
-      // Used to set arbitrary headers.
-      void set_header(http_field fields);
-      void set_header(std::string field_name, std::string field_value);
-      void set_headers(std::vector<http_field> fields);
-
-      // TODO: add UTF16 support, via Boost-Locale (?)
-
-      void set_body(std::string body);
-      /*
-      // If the content-type header is not yet set, it will set it to 
-      void set_body(std::string &&body_text);
-      // If the content-type header is not yet set, it will set it to 
-      void set_body(const std::string &body_text);
-      // If the content-type header is not yet set, it will set it to 
-      void set_body(std::vector<unsigned char> &&body_data);
-      // If the content-type header is not yet set, it will set it to 
-      void set_body(const std::vector<unsigned char> &body_data);
-      // If the content-type header is not yet set, it will set it to 
-      void set_body(std::istream &stream);
-      // If the content-type header is not yet set, it will set it to 
-      void set_body(std::istream &stream, std::size_t content_length);
-      */
-
-      
-      // Returns a stream representing the request data.
-      HTTPResponse* getResult() {
-        return response_;
-      };
-      
-    protected:
-      http::HTTPResponse* response_;   
-  };
+ 
 }
 
 #endif

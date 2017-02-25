@@ -30,15 +30,15 @@ class Response {
 
 private:
 	std::string reason_phrase_;
-    ResponseCode status_code_;
-    
-    http::http_headers http_headers_;
-    std::string http_version_ = "HTTP/1.1";
+  ResponseCode status_code_;
+  
+  http::http_headers http_headers_;
+  std::string http_version_ = "HTTP/1.1";
 
-      
-    std::string body_;
-      
-    const char* line_break = "\r\n";
+    
+  std::string body_;
+    
+  const char* line_break = "\r\n";
 
 };
 
