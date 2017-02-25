@@ -6,7 +6,7 @@ GMOCK_DIR=googletest/googlemock
 GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include 
 GMOCK_FLAGS=-isystem $(GMOCK_DIR)/include
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -pedantic -std=c++11 $(BOOST)
-CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest server/httpResponse server/http filesystem/file_opener server/file_handler server/request_handler
+CLASSES=nginx-configparser/config_parser server/server webserver server/httpRequest server/httpResponse server/http filesystem/file_opener server/file_handler server/echo_handler server/request_handler
 GCOV=config_parser.cc server.cc webserver.cc httpRequest.cc http.cc http_404.cc http_echo.cc http_file.cc file_opener.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
 TESTS=$(CLASSES:=_test)
@@ -24,6 +24,7 @@ filesystem/file_opener.cc: filesystem/file_opener.h
 server/file_handler.cc: server/file_handler.h
 server/http.cc: server/http.h
 server/httpResponse.cc: server/httpResponse.h
+server/echo_handler.cc: server/echo_handler.h
 
 webserver: $(UTIL_CLASSES)
 	$(CXX) -o $@ $^ $(CXXFLAGS) main.cc
@@ -52,9 +53,18 @@ integration: webserver
 	python integration_test.py
 
 clean:
+<<<<<<< HEAD
 	rm -rf *.o nginx-configparser/config_parser $(CLASSES) webserver *.dSYM *.a *.gcda *.gcno *.gcov
 	rm -rf nginx-configparser/*.a nginx-configparser/*.gcda nginx-configparser/*.gcno nginx-configparser/*.gcov
 	rm -rf httpRequest_test webserver_test server/httpRequest_test server/http_404_test server/http_echo_test server/http_file_test server/http_test server/server_test filesystem/file_opener_test nginx-configparser/config_parser_test
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 	rm -rf server/*.a server/*.gcda server/*.gcno server/*.gcov
 
+=======
+	find . -type f -iname \*.o -delete
+	find . -type f -iname \*.a -delete
+	find . -type f -iname \*.gcda -delete
+	find . -type f -iname \*.gcno -delete
+	find . -type f -iname \*.gcov -delete
+	rm -rf $(CLASSES) $(TESTS) webserver *.dSYM 
+>>>>>>> master
