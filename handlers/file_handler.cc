@@ -60,3 +60,4 @@ RequestHandler::Status StaticHandler::HandleRequest(const Request& request, Resp
 
     return OK;
 }
+
