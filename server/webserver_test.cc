@@ -2,7 +2,7 @@
 #include "gmock/gmock.h"
 
 #include "webserver.h"
-#include "nginx-configparser/config_parser.h"
+#include "../nginx-configparser/config_parser.h"
 #include <string>
 #include <boost/asio.hpp>
 
