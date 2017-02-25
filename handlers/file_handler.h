@@ -1,13 +1,16 @@
 #ifndef FILE_HANDLER_H
 #define FILE_HANDLER_H
 
-#include <string>
-#include "../nginx-configparser/config_parser.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
 #include "request_handler.h"
-#include "not_found_handler.h"
+
+#include <string>
+
+#include "../nginx-configparser/config_parser.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
 #include "../filesystem/file_opener.h"
+#include "not_found_handler.h"
+
 
 class StaticHandler : public RequestHandler{
 

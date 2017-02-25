@@ -2,6 +2,9 @@
 // based off of: http://www.boost.org/doc/libs/1_54_0/doc/html/boost_asio/example/cpp11/echo/async_tcp_echo_server.cpp
 // http://think-async.com/asio/boost_asio_1_5_3/doc/html/boost_asio/example/local/stream_server.cpp
 
+
+#include "server.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -10,12 +13,12 @@
 #include <vector>
 
 #include <boost/asio.hpp>
-#include "../webserver.h"
-#include "server.h"
-#include "http.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
-#include "request_handler.h"
+
+#include "webserver.h"
+#include "../http/http.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
+#include "../handlers/request_handler.h"
 
 using boost::asio::ip::tcp;
 

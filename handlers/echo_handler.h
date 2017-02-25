@@ -3,8 +3,8 @@
 
 #include <string>
 #include "../nginx-configparser/config_parser.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
 #include "request_handler.h"
 
 class EchoHandler : public RequestHandler {

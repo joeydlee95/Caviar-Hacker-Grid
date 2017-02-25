@@ -1,9 +1,12 @@
 #include "gtest/gtest.h"
-#include "httpRequest.h"
-#include "httpResponse.h"
 #include "echo_handler.h"
-#include "../nginx-configparser/config_parser.h"
+
 #include <vector>
+
+#include "../http/httpRequest.h"
+#include "../http/httpResponse.h"
+#include "../nginx-configparser/config_parser.h"
+
 
 TEST(EchoHandlerTest, BasicTest) {
   std::string raw_request= "GET /echo HTTP/1.1\r\nHost: localhost:3000\r\n\r\n";
