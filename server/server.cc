@@ -43,18 +43,19 @@ void Session::do_read() {
       if (!ec) {
         printf("Incoming Data length %lu:\n", len);
         std::unique_ptr<Request> req = Request::Parse(data_);
+        Response* response = new Response;
+        std::string response_string;
         if(req.get()) {
           // response valid 
+          printf("request key: %s\n", req->uri().c_str());
           std::string key = "";
           for(const auto & key_match : *handler_->RequestHandlers) {
-            printf("going over handler with key %s\n", key_match.first.c_str());
             auto res = std::mismatch(key_match.first.begin(), key_match.first.end(), req->uri().begin());
             if(res.first == key_match.first.end()) { //match found
               std::string tmp_key = std::string(key_match.first.begin(), res.first);
               if(tmp_key.size() > key.size()) { //if the match is better, that's our new key'
                 
                 key = tmp_key;
-                printf("key now: %s\n", key.c_str());
               }
             }
           }
@@ -62,25 +63,30 @@ void Session::do_read() {
           if(key == "") {
             // use the default handler, as no key was found for the URI
             printf("no key found, 404ing\n");
-            do_write(handler_->DefaultHandler);
+            handler_->DefaultHandler->HandleRequest(*req, response);
           }
           else {
             printf("key %s found\n", key.c_str());
-            do_write(handler_->DefaultHandler);
-            // do_write(handler_->RequestHandlers->find(key)->second);
+            printf("key in config: %s\n", handler_->RequestHandlers->find(key)->first.c_str());
+            // do_write(handler_->DefaultHandler);
+            handler_->RequestHandlers->find(key)->second->HandleRequest(*req, response);
           }
+
+          response_string = response->ToString();
         } else {
           // response invalid, return a 500
+          response_string = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
         }
 
+        do_write(response_string);
+        delete response;
       }
   });
 }
 
-void Session::do_write(RequestHandler* handler) {
+void Session::do_write(const std::string resp) {
   auto self(shared_from_this());
-  std::string builder_string = "Temporary";
-  boost::asio::async_write(socket_, boost::asio::buffer(&builder_string[0], builder_string.length()),
+  boost::asio::async_write(socket_, boost::asio::buffer(&resp[0], resp.length()),
     [this, self](boost::system::error_code ec, std::size_t len) {
   });
 

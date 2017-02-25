@@ -26,7 +26,7 @@ public:
 private:
   void do_read();
 
-  void do_write(RequestHandler* handler);
+  void do_write(const std::string resp);
 
   tcp::socket socket_;
   std::string data_;

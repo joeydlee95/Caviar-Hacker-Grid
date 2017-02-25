@@ -1,7 +1,7 @@
 port 2020;  # This is also a comment.
 
 path / StaticHandler {
-      root /foo/bar;
+      root files_served/;
 }
 
 path /echo EchoHandler {}

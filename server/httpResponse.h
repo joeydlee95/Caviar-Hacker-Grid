@@ -18,7 +18,7 @@ class Response {
     // Define your HTTP response codes here.
     OK = 200,
     NOT_FOUND = 404,
-    BAD_REQUEST = 400
+    BAD_REQUEST = 500
   };
   
   void SetStatus(const ResponseCode response_code);
