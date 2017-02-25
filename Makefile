@@ -6,7 +6,7 @@ GMOCK_DIR=googletest/googlemock
 GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include 
 GMOCK_FLAGS=-isystem $(GMOCK_DIR)/include
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -pedantic -std=c++11 $(BOOST)
-CLASSES=nginx-configparser/config_parser server/server webserver http/httpRequest http/httpResponse http/http filesystem/file_opener server/file_handler server/echo_handler server/request_handler server/not_found_handler
+CLASSES=nginx-configparser/config_parser server/server webserver http/httpRequest http/httpResponse http/http filesystem/file_opener handlers/file_handler handlers/echo_handler handlers/request_handler handlers/not_found_handler
 GCOV=config_parser.cc server.cc webserver.cc httpRequest.cc http.cc http_404.cc http_echo.cc http_file.cc file_opener.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
 TESTS=$(CLASSES:=_test)
@@ -17,15 +17,17 @@ all: webserver
 gcov: GTEST_FLAGS += -fprofile-arcs -ftest-coverage
 
 nginx-configparser/config_parser.cc: nginx-configparser/config_parser.h
-server/server.cc: server/server.h
-webserver.cc: webserver.h
-server/httpRequest.cc: server/httpRequest.h
 filesystem/file_opener.cc: filesystem/file_opener.h
-server/file_handler.cc: server/file_handler.h
-server/http.cc: server/http.h
-server/httpResponse.cc: server/httpResponse.h
-server/echo_handler.cc: server/echo_handler.h
-server/not_found_handler.cc: server/not_found_handler.h
+server/server.cc: server/server.h
+
+http/http.cc: http/http.h
+http/httpRequest.cc: http/httpRequest.h
+http/httpResponse.cc: http/httpResponse.h
+
+handlers/file_handler.cc: handlers/file_handler.h
+handlers/echo_handler.cc: handlers/echo_handler.h
+handlers/not_found_handler.cc: handlers/not_found_handler.h
+webserver.cc: webserver.h
 
 webserver: $(UTIL_CLASSES)
 	$(CXX) -o $@ $^ $(CXXFLAGS) main.cc

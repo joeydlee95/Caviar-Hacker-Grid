@@ -3,11 +3,13 @@
 #define WEBSERVER_H
 
 #include "nginx-configparser/config_parser.h"
-#include "server/server.h"
+
 #include <cstdlib>
 #include <string>
 #include <map>
-#include "server/request_handler.h"
+
+#include "server/server.h"
+#include "handlers/request_handler.h"
 
 
 

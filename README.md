@@ -75,10 +75,10 @@ Currently, the supported handlers are:
 * `http/http.cc` : Helper classes for http requests and responses, providing an abstraction over mimetypes, reason phrases, response codes, and headers. 
 * `http/httpRequest.cc` : Common API http requests. Allows parsing of HTTP Requests , and provides an API for easily extracting fields from it.
 * `http/httpResponse.cc` : Common API http responses. Allows a simple way to set the status, add headers, and set the body of the http response. Provides a simple method to create a string representing the HTTP response, by setting headers, status, and body via an API.
-* `server/request_handler.h` : The request handler API, base abstract class for handlers
-* `server/echo_handler.cc` : A request handler dispatching handlers with config EchoHandler. Returns the original HTTP request in plaintext.
-* `server/file_hander.cc` : A request handler dispatching files from the server's local file system. In the config, requires a root /path/to/files which is the path from which it will server the files. If the file isn't found it returns 404.
-* `server/not_found_handler.cc` : A request handler that dispatches 404 not found.
+* `handlers/request_handler.h` : The request handler API, base abstract class for handlers
+* `handlers/echo_handler.cc` : A request handler dispatching handlers with config EchoHandler. Returns the original HTTP request in plaintext.
+* `handlers/file_hander.cc` : A request handler dispatching files from the server's local file system. In the config, requires a root /path/to/files which is the path from which it will server the files. If the file isn't found it returns 404.
+* `handlers/not_found_handler.cc` : A request handler that dispatches 404 not found.
 
 ## Adding Code
 1. Modify the Makefile to include the path to your new handler. Do this by adding the path to your `(dependency_name)_test` in the `$CLASSES` variable, and creating a target for the headers.

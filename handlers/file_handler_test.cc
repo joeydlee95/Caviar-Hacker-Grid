@@ -1,10 +1,14 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "file_handler.h"
+
+#include <vector>
+
 #include "../http/httpRequest.h"
 #include "../http/httpResponse.h"
 #include "../nginx-configparser/config_parser.h"
-#include <vector>
+
+
 using ::testing::Return;
 using ::testing::_;
 using ::testing::SetArgReferee;
