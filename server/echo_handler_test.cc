@@ -4,14 +4,6 @@
 #include "echo_handler.h"
 #include "../nginx-configparser/config_parser.h"
 #include <vector>
-/*
-classMockNginxConfig : public NginxConfig{ 
- public:
-  std::vector<std::string> find(const std::string& key) const {
-    return mocked_find(key);
-  }
-  MOCK_CONST_METHOD1(mocked_find,
-*/
 
 TEST(EchoHandlerTest, BasicTest) {
   std::string raw_request= "GET /echo HTTP/1.1\r\nHost: localhost:3000\r\n\r\n";
