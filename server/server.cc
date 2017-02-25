@@ -42,15 +42,42 @@ void Session::do_read() {
     [this, self](boost::system::error_code ec, std::size_t len) {
       if (!ec) {
         printf("Incoming Data length %lu:\n", len);
-        // std::unique_ptr<Request> req = Request::Parse(data_);
+        std::unique_ptr<Request> req = Request::Parse(data_);
+        if(req.get()) {
+          // response valid 
+          std::string key = "";
+          for(const auto & key_match : *handler_->RequestHandlers) {
+            printf("going over handler with key %s\n", key_match.first.c_str());
+            auto res = std::mismatch(key_match.first.begin(), key_match.first.end(), req->uri().begin());
+            if(res.first == key_match.first.end()) { //match found
+              std::string tmp_key = std::string(key_match.first.begin(), res.first);
+              if(tmp_key.size() > key.size()) { //if the match is better, that's our new key'
+                
+                key = tmp_key;
+                printf("key now: %s\n", key.c_str());
+              }
+            }
+          }
 
-        HandlerConfiguration h = *handler_;
-        do_write();
+          if(key == "") {
+            // use the default handler, as no key was found for the URI
+            printf("no key found, 404ing\n");
+            do_write(handler_->DefaultHandler);
+          }
+          else {
+            printf("key %s found\n", key.c_str());
+            do_write(handler_->DefaultHandler);
+            // do_write(handler_->RequestHandlers->find(key)->second);
+          }
+        } else {
+          // response invalid, return a 500
+        }
+
       }
   });
 }
 
-void Session::do_write() {
+void Session::do_write(RequestHandler* handler) {
   auto self(shared_from_this());
   std::string builder_string = "Temporary";
   boost::asio::async_write(socket_, boost::asio::buffer(&builder_string[0], builder_string.length()),
