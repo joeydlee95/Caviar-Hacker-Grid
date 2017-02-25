@@ -1,14 +1,37 @@
 #include "webserver.h"
-#include "webserver_options.h"
 #include <utility>
 #include <map>
 #include <numeric>
 #include <boost/asio.hpp>
+#include "server/request_handler.h"
 
-std::string Webserver::ToString() const{
+
+std::string Webserver::ToString() const {
   std::string webserver_string;
   webserver_string.append("port: " + std::to_string(port_) + " \n");
+  for(auto const& handler : *HandlerMapping_.RequestHandlers) {
+    webserver_string.append("Handler registered: " + handler.first + "\n");
+  }
   return webserver_string;
+}
+
+bool Webserver::AddHandler(std::string path, std::string HandlerName, NginxConfig* config) {
+  auto handler = RequestHandler::CreateByName(HandlerName.c_str());
+  if(handler == nullptr) {
+    printf("Invalid Handler %s\n", HandlerName.c_str());
+    return false;
+  }
+  
+  RequestHandler::Status s = handler->Init(path, *config);
+  if(s == RequestHandler::INVALID_CONFIG) {
+    printf("Error initializing Handler %s due to invalid config %s\n", HandlerName.c_str(), config->ToString().c_str());
+    return false;
+  }
+
+  printf("Registered Handler %s to path %s\n", HandlerName.c_str(), path.c_str());
+  HandlerMapping_.RequestHandlers->insert(std::make_pair(path, handler));
+  return true;
+
 }
 
 boost::system::error_code Webserver::port_valid() {
@@ -35,6 +58,11 @@ bool Webserver::Init() {
 
   // port should be in the format of port ______;
   port_ = std::atoi(portTokens[1].c_str());
+  if(port_ > 65535) {
+    printf("Port number is greater than range. Valid port numbers: 0-65535, where 0-1024 require root access\n");
+    return false;
+  }
+  HandlerMapping_.RequestHandlers = new HandlerMap;
 
   std::vector<std::shared_ptr<NginxConfig> > statements = 
     config_->findAll("path");
@@ -45,22 +73,21 @@ bool Webserver::Init() {
       printf("Invalid path block %s\n", std::accumulate(statement->tokens_.begin(), statement->tokens_.end(), std::string("")).c_str());
       return false;
     }
-
-    // TODO: Replace this with the request handler. 
-    // std::map<std::string, std::vector<std::string> >* options = new std::map<std::string, std::vector<std::string> >;
-    // //token[0] = path, token[1] = <URL>, token[3] = <handler type>, childblock = additional options
-    // WebserverOptions opt(statement, options);
-    // printf("Options registered: %s\n", opt.ToString().c_str());
-    // //pair: /static -> root nginx-configparser;
-    
-    // options_.insert(std::make_pair(statement->tokens_[1], opt));
+    AddHandler(statement->tokens_[1], statement->tokens_[2], statement.get());
   }
 
   std::vector<std::string> defaultTokens = config_->find("default");  
-  if (portTokens.size() != 2) {
-    printf("Config does not specify a port\n");
+  if (defaultTokens.size() != 2) {
+    printf("Config does not specify a default handler\n");
     return false;
   }
+
+  HandlerMapping_.DefaultHandler = RequestHandler::CreateByName(defaultTokens[1].c_str());
+  if(HandlerMapping_.DefaultHandler == nullptr) {
+    printf("Default Handler Invalid: %s specified, not found\n", defaultTokens[1].c_str());
+    return false;
+  }
+  printf("Registered Default Handler %s\n", defaultTokens[1].c_str());
 
   boost::system::error_code ec = port_valid();
   if(ec.value() != boost::system::errc::success) {
@@ -74,7 +101,7 @@ bool Webserver::Init() {
 bool Webserver::run_server() {
   try {  
     boost::asio::io_service io_service;
-    Server s(io_service, port_);
+    Server s(io_service, port_, &HandlerMapping_);
     printf("Running server on port %d...\n", port_);
     io_service.run();
   } 

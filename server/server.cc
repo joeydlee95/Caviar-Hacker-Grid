@@ -13,14 +13,15 @@
 #include "../webserver.h"
 #include "server.h"
 #include "http.h"
-#include "http_echo.h"
-#include "http_404.h"
-#include "http_file.h"
+#include "httpRequest.h"
+#include "httpResponse.h"
+#include "request_handler.h"
 
 using boost::asio::ip::tcp;
 
-Session::Session(tcp::socket socket)
-  : socket_(std::move(socket)) {
+Session::Session(tcp::socket socket, HandlerConfiguration* handler)
+  : socket_(std::move(socket)),
+  handler_(handler) {
 }
 
 void Session::start() {
@@ -41,15 +42,51 @@ void Session::do_read() {
     [this, self](boost::system::error_code ec, std::size_t len) {
       if (!ec) {
         printf("Incoming Data length %lu:\n", len);
-        do_write();
+        std::unique_ptr<Request> req = Request::Parse(data_);
+        Response* response = new Response;
+        std::string response_string;
+        if(req.get()) {
+          // response valid 
+          printf("request key: %s\n", req->uri().c_str());
+          std::string best_key = "";
+          for(const auto & key_match : *handler_->RequestHandlers) {
+            auto res = std::mismatch(key_match.first.begin(), key_match.first.end(), req->uri().begin());
+            if(res.first == key_match.first.end()) { //match found
+              std::string tmp_key = std::string(key_match.first.begin(), res.first);
+              if(tmp_key.size() > best_key.size()) { //if the match is better, that's our new key'
+                
+                best_key = tmp_key;
+              }
+            }
+          }
+
+          if(best_key == "") {
+            // use the default handler, as no key was found for the URI
+            printf("no key found, 404ing\n");
+            handler_->DefaultHandler->HandleRequest(*req, response);
+          }
+          else {
+            printf("key %s found\n", best_key.c_str());
+            printf("key in config: %s\n", handler_->RequestHandlers->find(best_key)->first.c_str());
+            // do_write(handler_->DefaultHandler);
+            handler_->RequestHandlers->find(best_key)->second->HandleRequest(*req, response);
+          }
+
+          response_string = response->ToString();
+        } else {
+          // response invalid, return a 400
+          response_string = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n";
+        }
+
+        do_write(response_string);
+        delete response;
       }
   });
 }
 
-void Session::do_write() {
+void Session::do_write(const std::string resp) {
   auto self(shared_from_this());
-  std::string builder_string = "Temporary";
-  boost::asio::async_write(socket_, boost::asio::buffer(&builder_string[0], builder_string.length()),
+  boost::asio::async_write(socket_, boost::asio::buffer(&resp[0], resp.length()),
     [this, self](boost::system::error_code ec, std::size_t len) {
   });
 
@@ -59,20 +96,21 @@ void Session::do_write() {
 
 
 
-Server::Server(boost::asio::io_service& io_service, int port)
+Server::Server(boost::asio::io_service& io_service, int port, HandlerConfiguration* handler)
   : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-  socket_(io_service) {
-  do_accept();
+  socket_(io_service){
+  do_accept(handler);
 }
 
-void Server::do_accept()
+void Server::do_accept(HandlerConfiguration* handler)
 {
   acceptor_.async_accept(socket_,
-  [this](boost::system::error_code ec) {
+  [this, handler](boost::system::error_code ec) {
     if (!ec) {
-        std::make_shared<Session>(std::move(socket_))->start();
+        std::make_shared<Session>(std::move(socket_), handler)->start();
     }
 
-    do_accept();
+    // Continue accepting new connections
+    do_accept(handler);
   });
 }

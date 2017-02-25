@@ -28,7 +28,7 @@ TEST(FileHandlerTest, InitTest){
     .WillOnce(
   	  Return(set_tokens)	
     );	
-    StaticFileHandler handler;
+    StaticHandler handler;
     RequestHandler::Status ret = handler.Init("dummy", mock_config);
     EXPECT_EQ(handler.getPrefix(),"dummy");
     EXPECT_EQ(handler.getRoot(),"/static");
@@ -43,7 +43,7 @@ TEST(FileHandlerTest, InitFail){
     .WillOnce(
   	  Return(set_tokens)	
     );	
-    StaticFileHandler handler;
+    StaticHandler handler;
     RequestHandler::Status ret = handler.Init("dummy", mock_config);
    
     EXPECT_EQ(ret, RequestHandler::INVALID_CONFIG);
@@ -58,7 +58,7 @@ TEST(FileHandlerTest, HandleRequestTexT){
     .WillOnce(
   	  Return(set_tokens)	
     );	
-    StaticFileHandler handler;
+    StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/static1", mock_config);
     
     EXPECT_EQ(ret, RequestHandler::OK);
@@ -81,7 +81,7 @@ TEST(FileHandlerTest, HandleRequestJPG){
     .WillOnce(
   	  Return(set_tokens)	
     );	
-    StaticFileHandler handler;
+    StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/stat", mock_config);
     
     EXPECT_EQ(ret, RequestHandler::OK);
@@ -104,7 +104,7 @@ TEST(FileHandlerTest, WrongPrefixPos){
     .WillOnce(
   	  Return(set_tokens)	
     );	
-    StaticFileHandler handler;
+    StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/stat", mock_config);
     
     EXPECT_EQ(ret, RequestHandler::OK);
@@ -126,7 +126,7 @@ TEST(FileHandlerTest, NoPrefix){
     .WillOnce(
   	  Return(set_tokens)	
     );	
-    StaticFileHandler handler;
+    StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/stat", mock_config);
     
     EXPECT_EQ(ret, RequestHandler::OK);
@@ -150,7 +150,7 @@ TEST(FileHandlerTest, NotFound){
     .WillOnce(
   	  Return(set_tokens)	
     );	
-    StaticFileHandler handler;
+    StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/static1", mock_config);
     
     EXPECT_EQ(ret, RequestHandler::OK);

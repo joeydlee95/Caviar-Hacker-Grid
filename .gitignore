@@ -140,6 +140,9 @@ http_test
 file_opener_test
 file_handler_test
 httpResponse_test
+echo_handler_test
+not_found_Handler_test
+request_handler_test
 
 # gcc coverage testing tool files
 

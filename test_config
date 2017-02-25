@@ -1,13 +1,10 @@
-port 3000;
+port 2020;  # This is also a comment.
 
-location /static1 {
-    root server;
+path /serve StaticHandler {
+      root files_served/;
 }
 
-location /static2 {
-    root nginx-configparser;
-}
+path /echo EchoHandler {}
 
-location /echo {
-    echo;
-}
+# Default response handler if no handlers match.
+default NotFoundHandler {}
