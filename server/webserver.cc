@@ -5,10 +5,10 @@
 #include <numeric>
 #include <boost/asio.hpp>
 
-#include "handlers/request_handler.h"
+#include "../handlers/request_handler.h"
 
 
-std::string Webserver::ToString() const {
+std::string WebServer::ToString() const {
   std::string webserver_string;
   webserver_string.append("port: " + std::to_string(port_) + " \n");
   for(auto const& handler : *HandlerMapping_.RequestHandlers) {
@@ -17,7 +17,7 @@ std::string Webserver::ToString() const {
   return webserver_string;
 }
 
-bool Webserver::AddHandler(std::string path, std::string HandlerName, NginxConfig* config) {
+bool WebServer::AddHandler(std::string path, std::string HandlerName, NginxConfig* config) {
   auto handler = RequestHandler::CreateByName(HandlerName.c_str());
   if(handler == nullptr) {
     printf("Invalid Handler %s\n", HandlerName.c_str());
@@ -36,7 +36,7 @@ bool Webserver::AddHandler(std::string path, std::string HandlerName, NginxConfi
 
 }
 
-boost::system::error_code Webserver::port_valid() {
+boost::system::error_code WebServer::port_valid() {
   // Based off of: 
   // http://stackoverflow.com/questions/33358321/using-c-and-boost-or-not-to-check-if-a-specific-port-is-being-used
   using namespace boost::asio;
@@ -51,7 +51,7 @@ boost::system::error_code Webserver::port_valid() {
   return ec;
 }
 
-bool Webserver::Init() {
+bool WebServer::Init() {
   std::vector<std::string> portTokens = config_->find("port");
   if (portTokens.size() != 2) {
     printf("Config does not specify a port\n");
@@ -100,7 +100,7 @@ bool Webserver::Init() {
   return true;
 }
 
-bool Webserver::run_server() {
+bool WebServer::run_server() {
   try {  
     boost::asio::io_service io_service;
     Server s(io_service, port_, &HandlerMapping_);

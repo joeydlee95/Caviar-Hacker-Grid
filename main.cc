@@ -1,4 +1,4 @@
-#include "webserver.h"
+#include "server/webserver.h"
 #include "nginx-configparser/config_parser.h"
 
 int main(int argc, char* argv[]) {
@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  Webserver server(&config);
+  WebServer server(&config);
 
   if(!server.Init()) {
     printf("Error initializing server");

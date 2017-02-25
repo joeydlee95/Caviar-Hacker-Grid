@@ -2,22 +2,22 @@
 
 #define WEBSERVER_H
 
-#include "nginx-configparser/config_parser.h"
+#include "../nginx-configparser/config_parser.h"
 
 #include <cstdlib>
 #include <string>
 #include <map>
 
-#include "server/server.h"
-#include "handlers/request_handler.h"
+#include "server.h"
+#include "../handlers/request_handler.h"
 
 
 
 
 
-class Webserver {
+class WebServer {
 public:
-	Webserver(NginxConfig* config) : config_(config) {
+	WebServer(NginxConfig* config) : config_(config) {
 	}
 
 	virtual bool Init();
