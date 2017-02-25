@@ -58,7 +58,10 @@ bool Webserver::Init() {
 
   // port should be in the format of port ______;
   port_ = std::atoi(portTokens[1].c_str());
-
+  if(port_ > 65535) {
+    printf("Port number is greater than range. Valid port numbers: 0-65535, where 0-1024 require root access\n");
+    return false;
+  }
   HandlerMapping_.RequestHandlers = new HandlerMap;
 
   std::vector<std::shared_ptr<NginxConfig> > statements = 
