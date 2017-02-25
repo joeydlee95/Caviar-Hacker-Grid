@@ -9,7 +9,7 @@
 #include "not_found_handler.h"
 #include "../filesystem/file_opener.h"
 
-class StaticHandler: public RequestHandler{
+class StaticHandler : public RequestHandler{
 
 public:
 	//will only use the root path for now
