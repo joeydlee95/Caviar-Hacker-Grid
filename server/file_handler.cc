@@ -3,6 +3,7 @@
 #include <string.h>
 #include <cstdio>
 #include "http.h"
+#include "not_found_handler.h"
 
 RequestHandler::Status StaticHandler::Init(const std::string& uri_prefix, const NginxConfig& config){
 	this->m_uri_prefix_ = uri_prefix;
@@ -14,6 +15,7 @@ RequestHandler::Status StaticHandler::Init(const std::string& uri_prefix, const 
 		printf("StaticHandler.Init: Invalid config:\n%s", config.ToString().c_str() );
 		return INVALID_CONFIG;
 	}
+
 	this->m_root_path_ = root_config_tokens[1];
 	return OK;
 }
@@ -35,9 +37,7 @@ RequestHandler::Status StaticHandler::HandleRequest(const Request& request, Resp
 
 	if (!FileIO::FileExists(actual_uri)){
 		printf("StaticHandler.HandleRequest: File not found:%s\n",actual_uri.c_str());
-		response->SetStatus(Response::NOT_FOUND);
-		response->AddHeader("Content-Type",http::mime_type::ContentTypeAsString(http::mime_type::CONTENT_TYPE_TEXT_HTML));
-		return FILE_NOT_FOUND;
+		return NotFoundHandler_.HandleRequest(request, response);
 	}
 
 	response->SetStatus(Response::OK);

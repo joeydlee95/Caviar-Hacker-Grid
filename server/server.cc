@@ -75,7 +75,7 @@ void Session::do_read() {
           response_string = response->ToString();
         } else {
           // response invalid, return a 500
-          response_string = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+          response_string = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n";
         }
 
         do_write(response_string);

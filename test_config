@@ -1,10 +1,10 @@
 port 2020;  # This is also a comment.
 
-path / StaticHandler {
+path /serve StaticHandler {
       root files_served/;
 }
 
 path /echo EchoHandler {}
 
 # Default response handler if no handlers match.
-default StaticHandler {}
+default NotFoundHandler {}

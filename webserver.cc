@@ -28,7 +28,7 @@ bool Webserver::AddHandler(std::string path, std::string HandlerName, NginxConfi
     return false;
   }
 
-  printf("Registered Handler %s\n", HandlerName.c_str());
+  printf("Registered Handler %s to path %s\n", HandlerName.c_str(), path.c_str());
   HandlerMapping_.RequestHandlers->insert(std::make_pair(path, handler));
   return true;
 
@@ -84,6 +84,7 @@ bool Webserver::Init() {
     printf("Default Handler Invalid: %s specified, not found\n", defaultTokens[1].c_str());
     return false;
   }
+  printf("Registered Default Handler %s\n", defaultTokens[1].c_str());
 
   boost::system::error_code ec = port_valid();
   if(ec.value() != boost::system::errc::success) {

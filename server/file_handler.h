@@ -6,6 +6,7 @@
 #include "httpRequest.h"
 #include "httpResponse.h"
 #include "request_handler.h"
+#include "not_found_handler.h"
 #include "../filesystem/file_opener.h"
 
 class StaticHandler: public RequestHandler{
@@ -37,6 +38,7 @@ public:
 private:
 	std::string m_uri_prefix_;
 	std::string m_root_path_;
+	NotFoundHandler NotFoundHandler_;
 
 };
 
