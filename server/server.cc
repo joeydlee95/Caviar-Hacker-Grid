@@ -51,33 +51,33 @@ void Session::do_read() {
         if(req.get()) {
           // response valid 
           printf("request key: %s\n", req->uri().c_str());
-          std::string key = "";
+          std::string best_key = "";
           for(const auto & key_match : *handler_->RequestHandlers) {
             auto res = std::mismatch(key_match.first.begin(), key_match.first.end(), req->uri().begin());
             if(res.first == key_match.first.end()) { //match found
               std::string tmp_key = std::string(key_match.first.begin(), res.first);
-              if(tmp_key.size() > key.size()) { //if the match is better, that's our new key'
+              if(tmp_key.size() > best_key.size()) { //if the match is better, that's our new key'
                 
-                key = tmp_key;
+                best_key = tmp_key;
               }
             }
           }
 
-          if(key == "") {
+          if(best_key == "") {
             // use the default handler, as no key was found for the URI
             printf("no key found, 404ing\n");
             handler_->DefaultHandler->HandleRequest(*req, response);
           }
           else {
-            printf("key %s found\n", key.c_str());
-            printf("key in config: %s\n", handler_->RequestHandlers->find(key)->first.c_str());
+            printf("key %s found\n", best_key.c_str());
+            printf("key in config: %s\n", handler_->RequestHandlers->find(best_key)->first.c_str());
             // do_write(handler_->DefaultHandler);
-            handler_->RequestHandlers->find(key)->second->HandleRequest(*req, response);
+            handler_->RequestHandlers->find(best_key)->second->HandleRequest(*req, response);
           }
 
           response_string = response->ToString();
         } else {
-          // response invalid, return a 500
+          // response invalid, return a 400
           response_string = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n";
         }
 
