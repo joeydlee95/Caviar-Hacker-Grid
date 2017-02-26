@@ -6,6 +6,7 @@
 #include <boost/asio.hpp>
 
 #include "../handlers/request_handler.h"
+#include "../handlers/status_handler.h"
 
 
 std::string WebServer::ToString() const {
@@ -23,15 +24,26 @@ bool WebServer::AddHandler(std::string path, std::string HandlerName, NginxConfi
     printf("Invalid Handler %s\n", HandlerName.c_str());
     return false;
   }
-  
+  if(HandlerName == "StatusHandler") {
+    StatusHandler* statusHandler = dynamic_cast<StatusHandler*>(handler);
+    statusHandler->InitStatus(&status_);
+    // handler = f;
+  }
+
   RequestHandler::Status s = handler->Init(path, *config);
+  
   if(s == RequestHandler::INVALID_CONFIG) {
     printf("Error initializing Handler %s due to invalid config %s\n", HandlerName.c_str(), config->ToString().c_str());
     return false;
   }
 
   printf("Registered Handler %s to path %s\n", HandlerName.c_str(), path.c_str());
-  HandlerMapping_.RequestHandlers->insert(std::make_pair(path, handler));
+  auto res = HandlerMapping_.RequestHandlers->insert(std::make_pair(path, handler));
+  if(res.second == false) {
+    printf("Failed to insert %s with Handler %s because path already exists\n", path.c_str(), HandlerName.c_str());
+    return false;
+  }
+  status_.AddHandler(path, HandlerName);
   return true;
 
 }
@@ -84,12 +96,15 @@ bool WebServer::Init() {
     return false;
   }
 
+
   HandlerMapping_.DefaultHandler = RequestHandler::CreateByName(defaultTokens[1].c_str());
   if(HandlerMapping_.DefaultHandler == nullptr) {
     printf("Default Handler Invalid: %s specified, not found\n", defaultTokens[1].c_str());
     return false;
   }
   printf("Registered Default Handler %s\n", defaultTokens[1].c_str());
+  
+  status_.SetDefaultHandler(defaultTokens[1]);
 
   boost::system::error_code ec = port_valid();
   if(ec.value() != boost::system::errc::success) {
@@ -103,7 +118,7 @@ bool WebServer::Init() {
 bool WebServer::run_server() {
   try {  
     boost::asio::io_service io_service;
-    Server s(io_service, port_, &HandlerMapping_);
+    Server s(io_service, port_, &HandlerMapping_, &status_);
     printf("Running server on port %d...\n", port_);
     io_service.run();
   } 

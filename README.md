@@ -88,7 +88,7 @@ Currently, the supported handlers are:
   dependency_name: dependency_name.h
   ```
 2. Create the files (`dependency_name.cc`, `dependency_name.h`, `dependency_name_test.cc`)
-
+3. Add the binary created `dependeny_name_test` to the .gitignore
 ## Adding Request handlers
 After following the above methods to add code, in the header file:
 * Add the following header dependencies: 

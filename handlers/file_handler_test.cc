@@ -165,5 +165,5 @@ TEST(FileHandlerTest, NotFound){
     auto handler_status = handler.HandleRequest(*req,&resp);
 
     EXPECT_EQ(handler_status,RequestHandler::FILE_NOT_FOUND);
-    EXPECT_EQ(resp.ToString(),"HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n");
+    EXPECT_EQ(resp.ToString(),"HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n");
 }

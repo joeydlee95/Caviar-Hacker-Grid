@@ -6,7 +6,7 @@ GMOCK_DIR=googletest/googlemock
 GTEST_FLAGS=-std=c++11 -isystem $(GTEST_DIR)/include 
 GMOCK_FLAGS=-isystem $(GMOCK_DIR)/include
 CXXFLAGS= -g $(CXXOPTIMIZE) -Wall -Werror -pedantic -std=c++11 $(BOOST)
-CLASSES=nginx-configparser/config_parser server/server server/webserver http/httpRequest http/httpResponse http/http filesystem/file_opener handlers/file_handler handlers/echo_handler handlers/request_handler handlers/not_found_handler
+CLASSES=nginx-configparser/config_parser server/server server/webserver http/httpRequest http/httpResponse http/http filesystem/file_opener handlers/file_handler handlers/echo_handler handlers/request_handler handlers/not_found_handler handlers/status_handler
 GCOV=config_parser.cc server.cc webserver.cc httpRequest.cc http.cc http_404.cc http_echo.cc http_file.cc file_opener.cc
 UTIL_CLASSES=$(CLASSES:=.cc)
 TESTS=$(CLASSES:=_test)
@@ -29,8 +29,8 @@ handlers/echo_handler.cc: handlers/echo_handler.h
 handlers/not_found_handler.cc: handlers/not_found_handler.h
 server/webserver.cc: server/webserver.h
 
-webserver: $(UTIL_CLASSES)
-	$(CXX) -o $@ $^ $(CXXFLAGS) main.cc
+webserver: main.cc $(UTIL_CLASSES)
+	$(CXX) -o $@ $^ $(CXXFLAGS)
 
 
 libgtest.a: 
@@ -42,7 +42,7 @@ libgmock.a:
 	g++ -isystem $(GTEST_DIR)/include -I$(GTEST_DIR) -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} -pthread -c ${GMOCK_DIR}/src/gmock-all.cc
 	ar -rv libgmock.a gtest-all.o gmock-all.o
 
-%_test: %.cc libgtest.a libgmock.a
+%_test: %.cc %_test.cc libgtest.a libgmock.a
 	$(CXX) $(GTEST_FLAGS) $(GMOCK_FLAGS) -pthread $(UTIL_CLASSES) $@.cc $(GMOCK_DIR)/src/gmock_main.cc libgmock.a $(BOOST) -o $(@:%.cc=%)
 
 

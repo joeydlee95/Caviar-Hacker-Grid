@@ -18,11 +18,13 @@
 
 using boost::asio::ip::tcp;
 
+class ServerStatus;
+
 class Session
   : public std::enable_shared_from_this<Session>
 {
 public:
-  Session(tcp::socket socket, HandlerConfiguration* handler);
+  Session(tcp::socket socket, HandlerConfiguration* handler, ServerStatus* status);
   void start();
 
 private:
@@ -33,17 +35,37 @@ private:
   tcp::socket socket_;
   std::string data_;
   HandlerConfiguration* handler_;
+  ServerStatus* status_;
 };
 
 class Server 
 {
 public:
-  Server(boost::asio::io_service& io_service, int port, HandlerConfiguration* handler);
+  Server(boost::asio::io_service& io_service, int port, HandlerConfiguration* handler, ServerStatus* status);
 
 private:
-  void do_accept(HandlerConfiguration* handler);
+  void do_accept(HandlerConfiguration* handler, ServerStatus* status);
   tcp::acceptor acceptor_;
   tcp::socket socket_;
 };
 
+
+class ServerStatus {
+public:
+	struct Status {
+		std::map<std::string, int> RequestCountByURL_;
+		std::map<int, int> ResponseCountByCode_;
+		std::map<std::string, std::string> RequestHandlers_;
+
+		std::string defaultHandler_;
+		int requests_ = 0;
+	};
+
+	void AddHandler(std::string path, std::string handler);
+	Status GetStatus(); 
+	void LogIncomingRequest(std::string path, int RespCode);
+  void SetDefaultHandler(std::string handler);
+private:
+	Status Status_;
+};
 #endif // If Guard

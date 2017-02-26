@@ -13,6 +13,6 @@ TEST(FileOpenerTest, FileExtensionLocation) {
 
 TEST(FileOpenerTest, FileToString) { 
   std::string content = "";
-  FileIO::FileToString("README.md",content);
+  FileIO::FileToString("filesystem/README_test.md",content);
   EXPECT_EQ(content,"# Caviar-Hacker-Grid\nCS130 Winter 2017 Webserver Project\n");
 }

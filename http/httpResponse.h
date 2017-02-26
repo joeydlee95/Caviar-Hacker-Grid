@@ -87,6 +87,7 @@ class Response {
   void SetStatus(const ResponseCode response_code);
   void AddHeader(const std::string& header_name, const std::string& header_value);
   void SetBody(const std::string& body);
+  int GetStatus();
   
   //for the moment it only has HTTP/1.1
   std::string ToString();
