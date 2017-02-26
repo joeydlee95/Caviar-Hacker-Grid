@@ -15,7 +15,8 @@ class RequestHandler {
     OK = 0,
     FILE_NOT_FOUND,
     BAD_REQUEST,
-    INVALID_CONFIG
+    INVALID_CONFIG,
+    MISCONFIGURED_HANDLER
     // Define your status codes here.
   };
   

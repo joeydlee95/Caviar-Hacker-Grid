@@ -6,6 +6,7 @@
 #include <boost/asio.hpp>
 
 #include "../handlers/request_handler.h"
+#include "../handlers/status_handler.h"
 
 
 std::string WebServer::ToString() const {
@@ -23,8 +24,16 @@ bool WebServer::AddHandler(std::string path, std::string HandlerName, NginxConfi
     printf("Invalid Handler %s\n", HandlerName.c_str());
     return false;
   }
-  
+  if(HandlerName == "StatusHandler") {
+    //hacky, but I couldn't get this to work without vtable errors with dynamic casting
+    
+    StatusHandler* statusHandler = dynamic_cast<StatusHandler*>(handler);
+    statusHandler->InitStatus(&status_);
+    // handler = f;
+  }
+
   RequestHandler::Status s = handler->Init(path, *config);
+  
   if(s == RequestHandler::INVALID_CONFIG) {
     printf("Error initializing Handler %s due to invalid config %s\n", HandlerName.c_str(), config->ToString().c_str());
     return false;
