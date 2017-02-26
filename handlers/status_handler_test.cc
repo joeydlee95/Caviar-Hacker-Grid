@@ -6,16 +6,26 @@
 #include "../http/httpRequest.h"
 #include "../http/httpResponse.h"
 #include "../nginx-configparser/config_parser.h"
+#include "../server/server.h"
 
 
-TEST(StatusHandlerTest, BasicTest) {
-  std::string raw_request= "GET /echo HTTP/1.1\r\nHost: localhost:3000\r\n\r\n";
-  auto req = Request::Parse(raw_request);
-  Response res;
-  StatusHandler h;
-  std::string expected_string = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nGET /echo HTTP/1.1\r\nHost: localhost:3000\r\n\r\n";
-  auto handler_status = h.HandleRequest(*req, &res);  
-  EXPECT_EQ(handler_status, RequestHandler::OK);
-  EXPECT_EQ(res.ToString(), expected_string);
+TEST(StatusHandlerTest, StatusConverter) {
+
+	ServerStatus::Status status;
+	status.port_ = 1024;
+	status.RequestCountByURL_ = {
+		{"/echo", 15},
+	};
+	status.ResponseCountByCode_ = {
+		{200, 100},
+		{404, 6}
+	};
+	status.requestHandlers_ = { "a", "b" };
+	status.requests_ = 140;
+
+	std::string html = StatusHandler::StatusToHtml(status);
+	
+
+  ASSERT_EQ(html, "asdf");
 }
 
