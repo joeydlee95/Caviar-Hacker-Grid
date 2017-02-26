@@ -61,8 +61,8 @@ class RequestHandlerRegisterer {
 typedef std::map<std::string,RequestHandler*> HandlerMap;
 
 struct HandlerConfiguration {
-	 HandlerMap* RequestHandlers;
-	 RequestHandler* DefaultHandler;
+   HandlerMap* RequestHandlers;
+   RequestHandler* DefaultHandler;
    std::string FindLongestHandlerKey(std::string key);
    ~HandlerConfiguration();
 };
