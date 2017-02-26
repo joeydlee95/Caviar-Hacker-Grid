@@ -74,8 +74,6 @@ std::string StatusHandler::StatusToHtml(const ServerStatus::Status& status) {
 
   html_string.append("</body>\n");
   html_string.append("</html>\n");
-  
-
 
   return html_string;
 }

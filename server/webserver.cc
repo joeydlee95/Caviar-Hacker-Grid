@@ -25,8 +25,6 @@ bool WebServer::AddHandler(std::string path, std::string HandlerName, NginxConfi
     return false;
   }
   if(HandlerName == "StatusHandler") {
-    //hacky, but I couldn't get this to work without vtable errors with dynamic casting
-    
     StatusHandler* statusHandler = dynamic_cast<StatusHandler*>(handler);
     statusHandler->InitStatus(&status_);
     // handler = f;

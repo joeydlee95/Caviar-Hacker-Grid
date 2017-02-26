@@ -35,7 +35,7 @@ private:
   tcp::socket socket_;
   std::string data_;
   HandlerConfiguration* handler_;
-	ServerStatus* status_;
+  ServerStatus* status_;
 };
 
 class Server 
