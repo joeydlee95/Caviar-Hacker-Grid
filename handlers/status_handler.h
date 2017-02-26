@@ -17,7 +17,7 @@ class StatusHandler : public RequestHandler {
 
   Status HandleRequest(const Request& request,
                        Response* response);
-  std::string StatusToHtml(const ServerStatus::Status& status);
+  static std::string StatusToHtml(const ServerStatus::Status& status);
   private:
     ServerStatus* status_;
 };
