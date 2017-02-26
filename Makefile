@@ -29,8 +29,8 @@ handlers/echo_handler.cc: handlers/echo_handler.h
 handlers/not_found_handler.cc: handlers/not_found_handler.h
 server/webserver.cc: server/webserver.h
 
-webserver: $(UTIL_CLASSES) main.cc
-	$(CXX) -o $@ $^ $(CXXFLAGS) main.cc
+webserver: main.cc $(UTIL_CLASSES)
+	$(CXX) -o $@ $^ $(CXXFLAGS)
 
 
 libgtest.a: 

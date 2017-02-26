@@ -29,7 +29,7 @@ public:
 	NginxConfig* config_;
 	int port_ = 0;
 private:
-
+	ServerStatus status_;
 	HandlerConfiguration HandlerMapping_;
 	bool AddHandler(std::string path, std::string HandlerName, NginxConfig* const config);
 
