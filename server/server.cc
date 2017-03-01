@@ -95,7 +95,7 @@ void Session::do_write(const std::string resp) {
     [this, self](boost::system::error_code ec, std::size_t len) {
   });
 
-  //session just ends after wrtie
+  //session just ends after write
 }
 
 
