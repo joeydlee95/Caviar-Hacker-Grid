@@ -27,7 +27,7 @@ RequestHandler::Status ProxyHandler::Init(const std::string& uri_prefix, const N
 
 	std::vector<std::string> port_config_tokens = config.find("port");
 	if (port_config_tokens.size() == 0) {
-		this->m_port_path_ = 80; // default http port
+		this->m_port_path_ = "80"; // default http port
 	} else if (port_config_tokens.size() != 2){
 		printf("ProxyHandler.Init: Invalid config:\n%s", config.ToString().c_str() );
 		return INVALID_CONFIG;
