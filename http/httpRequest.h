@@ -42,6 +42,11 @@ class Request {
 		return this->headers_;
 	}
 
+	void SetURI(const std::string& uri);
+	void SetHeader(const std::string& header_name, const std::string& header_value);
+	void SetBody(const std::string& body);
+	std::string ToString();
+
 private:
 	bool ParseRequest(const std::string& request);
 	//should only be called by ParseRequest
@@ -49,6 +54,7 @@ private:
 	bool processMessageBody(const std::string& request);
 	bool processHeaders(const std::string& request);
 
+protected:
 	//for example, we have "Accept-Languages: en-us" in the headers
 	//just do header_fields[Accept-Languages]
 	//notice that it will return "en-us"

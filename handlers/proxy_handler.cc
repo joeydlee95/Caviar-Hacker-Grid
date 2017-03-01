@@ -5,6 +5,7 @@
 #include <string>
 
 #include "../http/httpRequest.h"
+#include "../http/httpMutableRequest.h"
 #include "../http/httpResponse.h"
 #include "../http/http.h"
 
@@ -74,23 +75,11 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 		if (modified_uri[0] != '/') modified_uri = "/" + modified_uri;
 		printf("ProxyHandler: requesting '%s' ('%s')\n", modified_uri.c_str(), request.uri().c_str());
 
-		std::string CRLF = "\r\n";
-		request_stream << request.method() + " " + modified_uri + " " + request.version() << CRLF;
-		for (auto header : request.headers()) {
-			std::string& key = header.first;
-			std::string value = header.second;
-			if (key == "Connection") {
-				// make sure connection closes
-				value = "close";
-			}
-			if (key == "Host") {
-				// append :port if we're not using the default port
-				value = m_host_path_ + (m_port_path_ == "80" ? "" : ":" + m_port_path_);
-			}
-			request_stream << key << ": " << value << CRLF;
-		}
-		request_stream << CRLF;
-		request_stream << request.body();
+		MutableRequest modified_request(request);
+		modified_request.SetURI(modified_uri);
+		modified_request.SetHeader("Connection", "close");
+		modified_request.SetHeader("Host", m_host_path_ + ":" + m_port_path_);
+		request_stream << modified_request.ToString();
 
 		boost::asio::write(socket, reqBuf);
 		printf("ProxyHandler: sent request to server\n");
@@ -145,23 +134,21 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 					}
 
 					std::string newpath = request.uri();
-					std::unique_ptr<Request> newreq(new Request(request));
+					std::unique_ptr<MutableRequest> newreq(new MutableRequest(request));
 					// Location will be in form `newhost/new/path`, we want to split into 'newhost' + '/new/path'
 					auto pathPos = new_host.find('/');
 					if (pathPos != std::string::npos) {
 						newpath = new_host.substr(pathPos);
 						new_host = new_host.substr(0, pathPos);
 						printf("ProxyHandler: newpath = '%s'\n", newpath.c_str());
-						if (newpath != request.uri()) {
-							printf("ProxyHandler: !! new path not equal to old path !! '%s' vs '%s'\n",
-									newpath.c_str(), request.uri().c_str());
-						}
+						newreq->SetURI(newpath);
+						newreq->SetHeader("Host", new_host);
 					}
 
 					printf("ProxyHandler: redirecting to '%s'\n", new_host.c_str());
 					socket.close();
 
-					return SendRequestToServer(new_host, m_port_path_, *newreq, response, depth-1);
+					return SendRequestToServer(new_host, m_port_path_, (Request)*newreq, response, depth-1);
 				}
 			}
 
