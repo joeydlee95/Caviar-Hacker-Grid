@@ -12,6 +12,8 @@ class ProxyHandler : public RequestHandler {
   	Status Init(const std::string& uri_prefix, const NginxConfig& config);
   	Status HandleRequest(const Request& request, Response* response);
 
+  	Status SendRequestToServer(const std::string& host, const std::string& port, const Request& req, Response* resp, int depth=10);
+
  private:
     std::string m_uri_prefix_;
 	std::string m_host_path_;
