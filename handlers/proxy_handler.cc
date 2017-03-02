@@ -43,6 +43,27 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request, Respo
 	return SendRequestToServer(m_host_path_, m_port_path_, request, response);
 }
 
+// given a location string like "http://www.ucla.edu/some/path", extract "www.ucla.edu" and "/some/path"
+void ProxyHandler::ParseRedirectLocation(std::string location, std::string* new_path, std::string* new_host) {
+	location = boost::algorithm::trim_copy(location);
+
+	// strip "http://", if present
+	const size_t http_size = 7; // "http://"
+	if (location.size() > http_size && location.substr(0, http_size) == "http://") {
+		location = location.substr(http_size);
+	}
+
+	// Location will be in form `newhost/new/path`, we want to split into 'newhost' + '/new/path'
+	auto pathPos = location.find('/');
+	if (pathPos != std::string::npos) {
+		*new_host = location.substr(0, pathPos);
+		*new_path = location.substr(pathPos);
+	} else {
+		*new_host = location;
+		*new_path = "/"; // no path given
+	}
+}
+
 RequestHandler::Status ProxyHandler::SendRequestToServer(
 		const std::string& host, const std::string& port,
 		const Request& request, Response* response, int depth) {
@@ -84,8 +105,8 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 		boost::asio::write(socket, reqBuf);
 		printf("ProxyHandler: sent request to server\n");
 
-		const size_t maxResponseLineSize = 1024;
-		boost::asio::streambuf response_buf(maxResponseLineSize);
+		const size_t bufSize = 4096;
+		boost::asio::streambuf response_buf(bufSize);
 		boost::asio::read_until(socket, response_buf, "\r\n");
 
 		std::istream response_stream(&response_buf);
@@ -125,25 +146,15 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 
 			if (status_code == 302) {
 				if (header_key == "Location") {
-					std::string new_host = boost::algorithm::trim_copy(header_value);
-					printf("ProxyHandler: got 302! new Location: '%s'\n", new_host.c_str());
+					printf("ProxyHandler: got 302! new Location: '%s'\n", header_value.c_str());
 
-					size_t http_size = 7; // "http://"
-					if (new_host.size() > http_size && new_host.substr(0, http_size) == "http://") {
-						new_host = new_host.substr(http_size);
-					}
+					std::string new_path;
+					std::string new_host;
+					ParseRedirectLocation(header_value, &new_path, &new_host);
 
-					std::string newpath = request.uri();
 					std::unique_ptr<MutableRequest> newreq(new MutableRequest(request));
-					// Location will be in form `newhost/new/path`, we want to split into 'newhost' + '/new/path'
-					auto pathPos = new_host.find('/');
-					if (pathPos != std::string::npos) {
-						newpath = new_host.substr(pathPos);
-						new_host = new_host.substr(0, pathPos);
-						printf("ProxyHandler: newpath = '%s'\n", newpath.c_str());
-						newreq->SetURI(newpath);
-						newreq->SetHeader("Host", new_host);
-					}
+					newreq->SetURI(new_path);
+					newreq->SetHeader("Host", new_host);
 
 					printf("ProxyHandler: redirecting to '%s'\n", new_host.c_str());
 					socket.close();

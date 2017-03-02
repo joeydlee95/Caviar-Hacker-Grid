@@ -13,6 +13,7 @@ class ProxyHandler : public RequestHandler {
   	Status HandleRequest(const Request& request, Response* response);
 
   	Status SendRequestToServer(const std::string& host, const std::string& port, const Request& req, Response* resp, int depth=10);
+	void ParseRedirectLocation(std::string location, std::string* new_path, std::string* new_host);
 
  private:
     std::string m_uri_prefix_;
