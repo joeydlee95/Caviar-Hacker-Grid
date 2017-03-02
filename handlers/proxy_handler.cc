@@ -1,9 +1,5 @@
 #include "proxy_handler.h"
 
-#include <iostream>
-#include <sstream>
-#include <string>
-
 #include "../http/httpRequest.h"
 #include "../http/httpMutableRequest.h"
 #include "../http/httpResponse.h"
@@ -53,6 +49,12 @@ void ProxyHandler::ParseRedirectLocation(std::string location, std::string* new_
 		location = location.substr(http_size);
 	}
 
+	const size_t https_size = 8; // "https://"
+	if (location.size() > https_size && location.substr(0, https_size) == "https://") {
+		printf("ProxyHandler: warning: redirect specified https, which is unsupported.\n");
+		location = location.substr(https_size);
+	}
+
 	// Location will be in form `newhost/new/path`, we want to split into 'newhost' + '/new/path'
 	auto pathPos = location.find('/');
 	if (pathPos != std::string::npos) {
@@ -62,6 +64,45 @@ void ProxyHandler::ParseRedirectLocation(std::string location, std::string* new_
 		*new_host = location;
 		*new_path = "/"; // no path given
 	}
+}
+
+void ProxyHandler::ConnectSocketToEndpoint(tcp::socket* socket, std::string host, std::string port) {
+	tcp::resolver resolver(io_service_);
+	tcp::resolver::query query(host, port);
+	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+	boost::asio::connect(*socket, endpoint_iterator);
+}
+
+void ProxyHandler::WriteToSocket(tcp::socket* socket, const std::string& requestStr) {
+	boost::asio::streambuf reqBuf;
+	std::ostream request_stream(&reqBuf);
+	request_stream << requestStr;
+	boost::asio::write(*socket, reqBuf);
+}
+
+boost::system::error_code ProxyHandler::SocketReadToEOF(tcp::socket* socket, boost::asio::streambuf* buf, std::string* data) {
+	boost::system::error_code error;
+	while (true) {
+		boost::asio::read(*socket, *buf, boost::asio::transfer_at_least(1), error);
+		if (buf->size() == 0) {
+			break;
+		}
+		auto bufs = buf->data();
+		std::string bodyChunk(boost::asio::buffers_begin(bufs), boost::asio::buffers_begin(bufs) + buf->size());
+		*data += bodyChunk;
+		buf->consume(buf->size());
+	}
+	return error;
+}
+
+boost::system::error_code ProxyHandler::SocketReadUntil(
+		tcp::socket* socket, boost::asio::streambuf* buf, const std::string& sep) {
+	boost::system::error_code error;
+	boost::asio::read_until(*socket, *buf, sep, error);
+	if (error && error != boost::asio::error::eof) {
+		printf("ProxyHandler: error! %s\n", error.message().c_str());
+	}
+	return error;
 }
 
 RequestHandler::Status ProxyHandler::SendRequestToServer(
@@ -74,23 +115,19 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 		return OK;
 	}
 
-	printf("ProxyHandler: trying to connect to %s (port %s)\n", host.c_str(), port.c_str());
+	printf("ProxyHandler: connecting to %s (port %s)\n", host.c_str(), port.c_str());
 	try {
-		boost::asio::io_service io_service;
-		tcp::resolver resolver(io_service);
-		tcp::resolver::query query(host, port);
-		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+		tcp::socket socket(io_service_);
 
-		tcp::socket socket(io_service);
-		boost::asio::connect(socket, endpoint_iterator);
-		printf("ProxyHandler: connected\n");
+		ConnectSocketToEndpoint(&socket, host, port);
 
 		boost::asio::streambuf reqBuf;
 		std::ostream request_stream(&reqBuf);
 
 		if (request.uri().size() < m_uri_prefix_.size()) {
-			printf("ProxyHandler: request uri is shorter than uri prefix!\n");
+			printf("ProxyHandler: warning: request uri is shorter than uri prefix!\n");
 		}
+
 		std::string modified_uri = request.uri().substr(m_uri_prefix_.size());
 		if (modified_uri == "") modified_uri = "/";
 		if (modified_uri[0] != '/') modified_uri = "/" + modified_uri;
@@ -100,39 +137,33 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 		modified_request.SetURI(modified_uri);
 		modified_request.SetHeader("Connection", "close");
 		modified_request.SetHeader("Host", m_host_path_ + ":" + m_port_path_);
-		request_stream << modified_request.ToString();
 
-		boost::asio::write(socket, reqBuf);
-		printf("ProxyHandler: sent request to server\n");
+		WriteToSocket(&socket, modified_request.ToString());
 
-		const size_t bufSize = 4096;
+		const size_t bufSize = 8192;
 		boost::asio::streambuf response_buf(bufSize);
-		boost::asio::read_until(socket, response_buf, "\r\n");
-
 		std::istream response_stream(&response_buf);
+
+		SocketReadUntil(&socket, &response_buf, "\r\n");
+
 		std::string http_version;
 		response_stream >> http_version;
 		unsigned int status_code;
 		response_stream >> status_code;
 		std::string status_message;
-		std::getline(response_stream, status_message);
-		if ( ! response_stream || http_version.substr(0, 5) != "HTTP/")
-		{
-			printf("ProxyHandler: received invalid response\n");
-			return BAD_REQUEST;
-		}
-		printf("ProxyHandler: response %d -- %s\n", status_code, status_message.c_str());
+		std::getline(response_stream, status_message, '\r');
+		response_stream.ignore(1); // \n
 
+		printf("ProxyHandler: read status: %u %s\n", status_code, status_message.c_str());
 		response->SetStatus((Response::ResponseCode)status_code);
 
-
-		boost::asio::read_until(socket, response_buf, "\r\n\r\n");
+		SocketReadUntil(&socket, &response_buf, "\r\n\r\n");
 
 		std::string header;
 		while (std::getline(response_stream, header) && header != "\r") {
 			auto colonPos = header.find(':');
 			if (colonPos == std::string::npos) {
-				printf("ProxyHandler: malformed header '%s'\n", header.c_str());
+				printf("ProxyHandler: warning: malformed header '%s'\n", header.c_str());
 				continue;
 			}
 			std::string header_key = header.substr(0, colonPos);
@@ -140,13 +171,13 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 
 			if (header_key == "Connection") {
 				if (header_value != "close") {
-					printf("ProxyHandler: connection not set to close!! '%s'\n", header_value.c_str());
+					printf("ProxyHandler: warning: connection not set to close: '%s'\n", header_value.c_str());
 				}
 			}
 
 			if (status_code == 302) {
 				if (header_key == "Location") {
-					printf("ProxyHandler: got 302! new Location: '%s'\n", header_value.c_str());
+					printf("ProxyHandler: got 302, new Location: '%s'\n", header_value.c_str());
 
 					std::string new_path;
 					std::string new_host;
@@ -163,40 +194,23 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 				}
 			}
 
-			printf("ProxyHandler: header '%s' := '%s'\n", header_key.c_str(), header_value.c_str());
 			response->AddHeader(header_key, header_value);
 		}
 
-		printf("ProxyHandler: reading until eof\n");
-		boost::system::error_code error;
 		std::string body;
-		while (true) {
-			printf("ProxyHandler: reading...\n");
-			boost::asio::read(socket, response_buf, boost::asio::transfer_at_least(1), error);
-			if (response_buf.size() == 0) {
-				break;
-			}
-			auto bufs = response_buf.data();
-			std::string bodyChunk(boost::asio::buffers_begin(bufs), boost::asio::buffers_begin(bufs) + response_buf.size());
-			body += bodyChunk;
-			printf("ProxyHandler: read chunk length %zu\n", bodyChunk.size());
-			response_buf.consume(response_buf.size());
-		}
-		printf("ProxyHandler: read body (length %zu)\n", body.size());
-
-		response->SetBody(body);
+		auto error = SocketReadToEOF(&socket, &response_buf, &body);
 
 		if (error && error != boost::asio::error::eof) {
 			printf("ProxyHandler: error! %s\n", error.message().c_str());
+		} else {
+			response->SetBody(body);
 		}
 
 	} catch (std::exception& e) {
 		// could not reach server
-		printf("ProxyHandler: %s\n", e.what());
+		printf("ProxyHandler: exception: %s\n", e.what());
 		return BAD_REQUEST;
 	}
-
-	printf("ProxyHandler: done\n");
 
 	return OK;
 }
