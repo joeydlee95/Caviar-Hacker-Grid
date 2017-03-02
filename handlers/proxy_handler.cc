@@ -39,6 +39,14 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request, Respo
 	return SendRequestToServer(m_host_path_, m_port_path_, request, response);
 }
 
+// convert a local uri like "/proxy/some/path" to remote uri "/some/path"
+std::string ProxyHandler::ExtractNonProxyUri(const std::string& prefix, const std::string& uri) {
+	std::string modified_uri = uri.substr(prefix.size());
+	if (modified_uri == "") modified_uri = "/";
+	if (modified_uri[0] != '/') modified_uri = "/" + modified_uri;
+	return modified_uri;
+}
+
 // given a location string like "http://www.ucla.edu/some/path", extract "www.ucla.edu" and "/some/path"
 void ProxyHandler::ParseRedirectLocation(std::string location, std::string* new_path, std::string* new_host) {
 	location = boost::algorithm::trim_copy(location);
@@ -105,6 +113,24 @@ boost::system::error_code ProxyHandler::SocketReadUntil(
 	return error;
 }
 
+bool ProxyHandler::ReadNextHeader(std::istream* response_stream, std::string* header_key, std::string* header_value) {
+	std::string header;
+	if ( ! std::getline(*response_stream, header)) return false;
+	if (header == "\r") {
+		return false; // blank line = end of headers
+	}
+	auto colonPos = header.find(':');
+	if (colonPos == std::string::npos) {
+		printf("ProxyHandler: warning: malformed header '%s'\n", header.c_str());
+		*header_key = "";
+		*header_value = "";
+		return true; // possibly a transient error, try to get further headers.
+	}
+	*header_key = header.substr(0, colonPos);
+	*header_value = boost::algorithm::trim_copy(header.substr(colonPos+1));
+	return true;
+}
+
 RequestHandler::Status ProxyHandler::SendRequestToServer(
 		const std::string& host, const std::string& port,
 		const Request& request, Response* response, int depth) {
@@ -127,10 +153,7 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 		if (request.uri().size() < m_uri_prefix_.size()) {
 			printf("ProxyHandler: warning: request uri is shorter than uri prefix!\n");
 		}
-
-		std::string modified_uri = request.uri().substr(m_uri_prefix_.size());
-		if (modified_uri == "") modified_uri = "/";
-		if (modified_uri[0] != '/') modified_uri = "/" + modified_uri;
+		std::string modified_uri = ExtractNonProxyUri(m_uri_prefix_, request.uri());
 		printf("ProxyHandler: requesting '%s' ('%s')\n", modified_uri.c_str(), request.uri().c_str());
 
 		MutableRequest modified_request(request);
@@ -140,7 +163,7 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 
 		WriteToSocket(&socket, modified_request.ToString());
 
-		const size_t bufSize = 8192;
+		const size_t bufSize = 8192; // guaranteed large enough for HTTP status line
 		boost::asio::streambuf response_buf(bufSize);
 		std::istream response_stream(&response_buf);
 
@@ -159,16 +182,9 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 
 		SocketReadUntil(&socket, &response_buf, "\r\n\r\n");
 
-		std::string header;
-		while (std::getline(response_stream, header) && header != "\r") {
-			auto colonPos = header.find(':');
-			if (colonPos == std::string::npos) {
-				printf("ProxyHandler: warning: malformed header '%s'\n", header.c_str());
-				continue;
-			}
-			std::string header_key = header.substr(0, colonPos);
-			std::string header_value = boost::algorithm::trim_copy(header.substr(colonPos+1));
-
+		std::string header_key;
+		std::string header_value;
+		while (ReadNextHeader(&response_stream, &header_key, &header_value)) {
 			if (header_key == "Connection") {
 				if (header_value != "close") {
 					printf("ProxyHandler: warning: connection not set to close: '%s'\n", header_value.c_str());
