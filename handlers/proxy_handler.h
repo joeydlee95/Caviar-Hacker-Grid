@@ -8,6 +8,7 @@
 #include <boost/system/error_code.hpp>
 #include "../nginx-configparser/config_parser.h"
 #include "../http/httpRequest.h"
+#include "../http/httpMutableRequest.h"
 #include "../http/httpResponse.h"
 #include "request_handler.h"
 
@@ -20,6 +21,7 @@ class ProxyHandler : public RequestHandler {
 	Status SendRequestToServer(const std::string& host, const std::string& port, const Request& req, Response* resp, int depth=10);
 	std::string ExtractNonProxyUri(const std::string& prefix, const std::string& uri);
 	void ConnectSocketToEndpoint(boost::asio::ip::tcp::socket* socket, std::string host, std::string port);
+	void ModifyRequestForProxy(const Request& request, MutableRequest* modified_request);
 	void ParseRedirectLocation(std::string location, std::string* new_path, std::string* new_host);
 	boost::system::error_code SocketReadUntil(boost::asio::ip::tcp::socket* socket, boost::asio::streambuf* buf, const std::string& sep);
 	boost::system::error_code SocketReadToEOF(boost::asio::ip::tcp::socket* socket, boost::asio::streambuf* buf, std::string* data);

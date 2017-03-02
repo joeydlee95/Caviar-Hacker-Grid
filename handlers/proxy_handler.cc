@@ -1,7 +1,6 @@
 #include "proxy_handler.h"
 
 #include "../http/httpRequest.h"
-#include "../http/httpMutableRequest.h"
 #include "../http/httpResponse.h"
 #include "../http/http.h"
 
@@ -45,6 +44,18 @@ std::string ProxyHandler::ExtractNonProxyUri(const std::string& prefix, const st
 	if (modified_uri == "") modified_uri = "/";
 	if (modified_uri[0] != '/') modified_uri = "/" + modified_uri;
 	return modified_uri;
+}
+
+void ProxyHandler::ModifyRequestForProxy(const Request& request, MutableRequest* modified_request) {
+	if (request.uri().size() < m_uri_prefix_.size()) {
+		printf("ProxyHandler: warning: request uri is shorter than uri prefix!\n");
+	}
+	std::string modified_uri = ExtractNonProxyUri(m_uri_prefix_, request.uri());
+	printf("ProxyHandler: requesting '%s' ('%s')\n", modified_uri.c_str(), request.uri().c_str());
+
+	modified_request->SetURI(modified_uri);
+	modified_request->SetHeader("Connection", "close");
+	modified_request->SetHeader("Host", m_host_path_ + ":" + m_port_path_);
 }
 
 // given a location string like "http://www.ucla.edu/some/path", extract "www.ucla.edu" and "/some/path"
@@ -150,16 +161,8 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 		boost::asio::streambuf reqBuf;
 		std::ostream request_stream(&reqBuf);
 
-		if (request.uri().size() < m_uri_prefix_.size()) {
-			printf("ProxyHandler: warning: request uri is shorter than uri prefix!\n");
-		}
-		std::string modified_uri = ExtractNonProxyUri(m_uri_prefix_, request.uri());
-		printf("ProxyHandler: requesting '%s' ('%s')\n", modified_uri.c_str(), request.uri().c_str());
-
 		MutableRequest modified_request(request);
-		modified_request.SetURI(modified_uri);
-		modified_request.SetHeader("Connection", "close");
-		modified_request.SetHeader("Host", m_host_path_ + ":" + m_port_path_);
+		ModifyRequestForProxy(request, &modified_request);
 
 		WriteToSocket(&socket, modified_request.ToString());
 
