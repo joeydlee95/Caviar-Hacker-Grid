@@ -31,8 +31,9 @@ static void catch_alarm(int sig)
         ualarm((usecs), 0); \
         { fn; }; \
         ualarm(0, 0); \
+        GTEST_FATAL_FAILURE_("less than " #usecs " seconds to respond for " #fn); \
     } else { \
-        GTEST_FATAL_FAILURE_(#usecs " usecs timer tripped for " #fn); \
+        true; \ 
     } }
 
 TEST(BlockHandlerTest, BasicTest) {
@@ -40,8 +41,7 @@ TEST(BlockHandlerTest, BasicTest) {
   auto req = Request::Parse(raw_request);
   Response res;
   BlockingHandler h;
-   
-  
+
   ASSERT_USECS(h.HandleRequest(*req, &res), 8000);
 }
 
