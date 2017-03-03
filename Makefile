@@ -28,6 +28,7 @@ http/httpResponse.cc: http/httpResponse.h
 handlers/file_handler.cc: handlers/file_handler.h
 handlers/echo_handler.cc: handlers/echo_handler.h
 handlers/not_found_handler.cc: handlers/not_found_handler.h
+handlers/proxy_handler.cc: handlers/proxy_handler.h
 
 server/webserver.cc: server/webserver.h
 
