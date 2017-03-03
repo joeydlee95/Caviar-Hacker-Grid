@@ -130,16 +130,16 @@ ServerStatus::Status ServerStatus::GetStatus() {
 
 void ServerStatus::LogIncomingRequest(std::string url, int RespCode) {
   auto RespCodeCount = Status_.ResponseCountByCode_.insert(std::make_pair(RespCode, 1));
-	if (RespCodeCount.second == false) { // The particular response code is already in the map
-		RespCodeCount.first->second++;
-	}
+  if (RespCodeCount.second == false) { // The particular response code is already in the map
+    RespCodeCount.first->second++;
+  }
 
   auto URLCodeCount = Status_.RequestCountByURL_.insert(std::make_pair(url, 1));
-	if (URLCodeCount.second == false) { // The particular url is already in the map
-		URLCodeCount.first->second++;
-	}
+  if (URLCodeCount.second == false) { // The particular url is already in the map
+    URLCodeCount.first->second++;
+  }
 
-	Status_.requests_++;
+  Status_.requests_++;
 }
 
 void ServerStatus::SetDefaultHandler(std::string handler) {

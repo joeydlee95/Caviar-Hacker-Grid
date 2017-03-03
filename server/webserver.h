@@ -17,21 +17,21 @@
 
 class WebServer {
 public:
-	WebServer(NginxConfig* config) : config_(config) {
-	}
+  WebServer(NginxConfig* config) : config_(config) {
+  }
 
-	virtual bool Init();
-	virtual bool run_server();
-	virtual boost::system::error_code port_valid();
+  virtual bool Init();
+  virtual bool run_server();
+  virtual boost::system::error_code port_valid();
 
-	std::string ToString() const;
+  std::string ToString() const;
 
-	NginxConfig* config_;
-	int port_ = 0;
+  NginxConfig* config_;
+  int port_ = 0;
 private:
-	ServerStatus status_;
-	HandlerConfiguration HandlerMapping_;
-	bool AddHandler(std::string path, std::string HandlerName, NginxConfig* const config);
+  ServerStatus status_;
+  HandlerConfiguration HandlerMapping_;
+  bool AddHandler(std::string path, std::string HandlerName, NginxConfig* const config);
 
 };
 
