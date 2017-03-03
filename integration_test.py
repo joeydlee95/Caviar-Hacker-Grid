@@ -79,8 +79,8 @@ if __name__ == "__main__":
         #return True
     else:
         print("Failed Tests:")
-        for x in failedTests:
-            print(x, '\n')
+        for test in failedTests:
+            print(test, '\n')
         sys.exit(1)
         #return False
         
