@@ -28,6 +28,9 @@ RequestHandler::Status ProxyHandler::Init(const std::string& uri_prefix, const N
 		printf("ProxyHandler.Init: Invalid config:\n%s", config.ToString().c_str() );
 		return INVALID_CONFIG;
 	} else {
+		if (std::stoi(port_config_tokens[1]) > 65535) {
+			return INVALID_CONFIG;
+		}
 		this->m_port_path_ = port_config_tokens[1];
 	}
 
@@ -40,6 +43,11 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request, Respo
 
 // convert a local uri like "/proxy/some/path" to remote uri "/some/path"
 std::string ProxyHandler::ExtractNonProxyUri(const std::string& prefix, const std::string& uri) {
+	if (uri.size() < prefix.size()) {
+		printf("ProxyHandler: warning: request uri is shorter than uri prefix!\n");
+		return uri;
+	}
+
 	std::string modified_uri = uri.substr(prefix.size());
 	if (modified_uri == "") modified_uri = "/";
 	if (modified_uri[0] != '/') modified_uri = "/" + modified_uri;
@@ -47,9 +55,6 @@ std::string ProxyHandler::ExtractNonProxyUri(const std::string& prefix, const st
 }
 
 void ProxyHandler::ModifyRequestForProxy(const Request& request, MutableRequest* modified_request) {
-	if (request.uri().size() < m_uri_prefix_.size()) {
-		printf("ProxyHandler: warning: request uri is shorter than uri prefix!\n");
-	}
 	std::string modified_uri = ExtractNonProxyUri(m_uri_prefix_, request.uri());
 	printf("ProxyHandler: requesting '%s' ('%s')\n", modified_uri.c_str(), request.uri().c_str());
 

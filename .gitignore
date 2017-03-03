@@ -132,6 +132,7 @@ server_test
 webserver
 webserver_test
 httpRequest_test
+httpMutableRequest_test
 webserver_options_test
 http_echo_test
 http_file_test

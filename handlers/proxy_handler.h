@@ -17,9 +17,19 @@ class ProxyHandler : public RequestHandler {
   	Status Init(const std::string& uri_prefix, const NginxConfig& config);
   	Status HandleRequest(const Request& request, Response* response);
 
- private:
-	Status SendRequestToServer(const std::string& host, const std::string& port, const Request& req, Response* resp, int depth=10);
+	std::string getPrefix() {
+		return this->m_uri_prefix_;
+	}
+	std::string getProxyHost() {
+		return this->m_host_path_;
+	}
+	std::string getProxyPort() {
+		return this->m_port_path_;
+	}
+
 	std::string ExtractNonProxyUri(const std::string& prefix, const std::string& uri);
+	Status SendRequestToServer(const std::string& host, const std::string& port, const Request& req, Response* resp, int depth=10);
+ private:
 	void ConnectSocketToEndpoint(boost::asio::ip::tcp::socket* socket, std::string host, std::string port);
 	void ModifyRequestForProxy(const Request& request, MutableRequest* modified_request);
 	void ParseRedirectLocation(std::string location, std::string* new_path, std::string* new_host);
