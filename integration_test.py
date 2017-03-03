@@ -5,7 +5,7 @@ import os
 import time
 ## Global Vars ##
 passing = True
-port = 3000;
+port = 2020;
 #TODO: add a data strx to hold names of failed tests
 
 
@@ -22,9 +22,11 @@ def fail(msg):
     passing = False
 
 ## Start Server ##
-subprocess.call("nohup ./webserver test_config >/dev/null 2>&1 &", shell = True)
-pid = subprocess.check_output('ps -a | grep webserver', shell = True).split()[0]
-print(pid)
+WEBSERVER_EXECUTABLE = './webserver'
+webserver_process = subprocess.Popen([WEBSERVER_EXECUTABLE, 'test_config'])
+if webserver_process.poll():
+    fail("webserver exited with status %d" % webserver_process.returncode)
+print(webserver_process.pid)
 
 
 ## Testing Process ##
@@ -33,7 +35,7 @@ print("\nBeginning Integration Test.\n")
 
 #try :
 nameTest("Connection")
-command2 = 'curl -Is localhost:' + str(port) + " | cat"
+command2 = 'curl -Is localhost:' + str(port) + "/echo | cat"
 output=subprocess.check_output(command2, shell=True)
 if output != "":
     pas()
@@ -41,12 +43,11 @@ if output != "":
     line()
 #except CalledProcessError:
 else:
-    print("ERROR: Cannot connect to server.")
-    passing = False
+    fail("ERROR: Cannot connect to server.")
 
 
 ## Kill Server ##
-subprocess.call('kill ' + pid, shell = True)
+webserver_process.terminate()
 
 
 def TestProxyHandler():
@@ -57,7 +58,7 @@ def TestProxyHandler():
             'default NotFoundHandler {}\n'
             )
     proxy_config = (
-            'port 2020;\n'
+            'port 8081;\n'
             'path /proxy ProxyHandler {\n'
             '  host localhost;\n'
             '  port 8080;\n'
@@ -71,7 +72,6 @@ def TestProxyHandler():
     with open(proxy_config_file, 'w') as f:
         f.write(proxy_config)
 
-    WEBSERVER_EXECUTABLE = './webserver'
     backend_process = subprocess.Popen([WEBSERVER_EXECUTABLE, backend_config_file])
     proxy_process = subprocess.Popen([WEBSERVER_EXECUTABLE, proxy_config_file])
     time.sleep(0.1) # give time for webservers to open
@@ -81,7 +81,7 @@ def TestProxyHandler():
         return fail("proxy webserver exited with status %d" % proxy_process.returncode)
 
     backend_curl = 'curl -Is localhost:8080/echo | cat'
-    proxy_curl = 'curl -Is localhost:2020/proxy/echo | cat'
+    proxy_curl = 'curl -Is localhost:8081/proxy/echo | cat'
 
     backend_output = subprocess.check_output(backend_curl, shell=True)
     if backend_output == "":
