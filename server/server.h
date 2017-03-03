@@ -52,20 +52,20 @@ private:
 
 class ServerStatus {
 public:
-	struct Status {
-		std::map<std::string, int> RequestCountByURL_;
-		std::map<int, int> ResponseCountByCode_;
-		std::map<std::string, std::string> RequestHandlers_;
+  struct Status {
+    std::map<std::string, int> RequestCountByURL_;
+    std::map<int, int> ResponseCountByCode_;
+    std::map<std::string, std::string> RequestHandlers_;
 
-		std::string defaultHandler_;
-		int requests_ = 0;
-	};
+    std::string defaultHandler_;
+    int requests_ = 0;
+  };
 
-	void AddHandler(std::string path, std::string handler);
-	Status GetStatus(); 
-	void LogIncomingRequest(std::string path, int RespCode);
+  void AddHandler(std::string path, std::string handler);
+  Status GetStatus(); 
+  void LogIncomingRequest(std::string path, int RespCode);
   void SetDefaultHandler(std::string handler);
 private:
-	Status Status_;
+  Status Status_;
 };
 #endif // If Guard

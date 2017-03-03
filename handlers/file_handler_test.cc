@@ -24,14 +24,14 @@ public:
 
 
 TEST(FileHandlerTest, InitTest){
-	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
-	set_tokens.push_back("root");
-	set_tokens.push_back("/static");
-	EXPECT_CALL(mock_config, mocked_find("root"))
+    MockNginxConfig mock_config;
+    std::vector<std::string> set_tokens;
+    set_tokens.push_back("root");
+    set_tokens.push_back("/static");
+    EXPECT_CALL(mock_config, mocked_find("root"))
     .WillOnce(
-  	  Return(set_tokens)	
-    );	
+      Return(set_tokens)  
+    );  
     StaticHandler handler;
     RequestHandler::Status ret = handler.Init("dummy", mock_config);
     EXPECT_EQ(handler.getPrefix(),"dummy");
@@ -40,13 +40,13 @@ TEST(FileHandlerTest, InitTest){
 }
 
 TEST(FileHandlerTest, InitFail){
-	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
-	set_tokens.push_back("root");
-	EXPECT_CALL(mock_config, mocked_find("root"))
+  MockNginxConfig mock_config;
+  std::vector<std::string> set_tokens;
+  set_tokens.push_back("root");
+  EXPECT_CALL(mock_config, mocked_find("root"))
     .WillOnce(
-  	  Return(set_tokens)	
-    );	
+      Return(set_tokens)  
+    );  
     StaticHandler handler;
     RequestHandler::Status ret = handler.Init("dummy", mock_config);
    
@@ -54,14 +54,14 @@ TEST(FileHandlerTest, InitFail){
 }
 
 TEST(FileHandlerTest, HandleRequestTexT){
-	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
-	set_tokens.push_back("root");
-	set_tokens.push_back("files_served");
-	EXPECT_CALL(mock_config, mocked_find("root"))
+  MockNginxConfig mock_config;
+  std::vector<std::string> set_tokens;
+  set_tokens.push_back("root");
+  set_tokens.push_back("files_served");
+  EXPECT_CALL(mock_config, mocked_find("root"))
     .WillOnce(
-  	  Return(set_tokens)	
-    );	
+      Return(set_tokens)  
+    );  
     StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/static1", mock_config);
     
@@ -77,14 +77,14 @@ TEST(FileHandlerTest, HandleRequestTexT){
 }
 
 TEST(FileHandlerTest, HandleRequestJPG){
-	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
-	set_tokens.push_back("root");
-	set_tokens.push_back("files_served");
-	EXPECT_CALL(mock_config, mocked_find("root"))
+  MockNginxConfig mock_config;
+  std::vector<std::string> set_tokens;
+  set_tokens.push_back("root");
+  set_tokens.push_back("files_served");
+  EXPECT_CALL(mock_config, mocked_find("root"))
     .WillOnce(
-  	  Return(set_tokens)	
-    );	
+      Return(set_tokens)  
+    );  
     StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/stat", mock_config);
     
@@ -100,14 +100,14 @@ TEST(FileHandlerTest, HandleRequestJPG){
 }
 
 TEST(FileHandlerTest, WrongPrefixPos){
-	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
-	set_tokens.push_back("root");
-	set_tokens.push_back("files_served");
-	EXPECT_CALL(mock_config, mocked_find("root"))
+  MockNginxConfig mock_config;
+  std::vector<std::string> set_tokens;
+  set_tokens.push_back("root");
+  set_tokens.push_back("files_served");
+  EXPECT_CALL(mock_config, mocked_find("root"))
     .WillOnce(
-  	  Return(set_tokens)	
-    );	
+      Return(set_tokens)  
+    );  
     StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/stat", mock_config);
     
@@ -122,14 +122,14 @@ TEST(FileHandlerTest, WrongPrefixPos){
 }
 
 TEST(FileHandlerTest, NoPrefix){
-	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
-	set_tokens.push_back("root");
-	set_tokens.push_back("files_served");
-	EXPECT_CALL(mock_config, mocked_find("root"))
+  MockNginxConfig mock_config;
+  std::vector<std::string> set_tokens;
+  set_tokens.push_back("root");
+  set_tokens.push_back("files_served");
+  EXPECT_CALL(mock_config, mocked_find("root"))
     .WillOnce(
-  	  Return(set_tokens)	
-    );	
+      Return(set_tokens)  
+    );  
     StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/stat", mock_config);
     
@@ -146,14 +146,14 @@ TEST(FileHandlerTest, NoPrefix){
 }
 
 TEST(FileHandlerTest, NotFound){
-	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
-	set_tokens.push_back("root");
-	set_tokens.push_back("files_served");
-	EXPECT_CALL(mock_config, mocked_find("root"))
+  MockNginxConfig mock_config;
+  std::vector<std::string> set_tokens;
+  set_tokens.push_back("root");
+  set_tokens.push_back("files_served");
+  EXPECT_CALL(mock_config, mocked_find("root"))
     .WillOnce(
-  	  Return(set_tokens)	
-    );	
+      Return(set_tokens)  
+    );  
     StaticHandler handler;
     RequestHandler::Status ret = handler.Init("/static1", mock_config);
     

@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   }
   if(!server.run_server()) {
     printf("Error running server.");
-  	return 1;
+    return 1;
   }
   
   return 0;
