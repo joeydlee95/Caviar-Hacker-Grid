@@ -1,4 +1,4 @@
-port 2020;  # This is also a comment.
+port 2024;  # This is also a comment.
 
 path /serve StaticHandler {
       root files_served/;
@@ -7,6 +7,8 @@ path /serve StaticHandler {
 path /echo EchoHandler {}
 
 path /status StatusHandler {}
+
+path /block BlockingHandler {}
 
 # Default response handler if no handlers match.
 default NotFoundHandler {}
