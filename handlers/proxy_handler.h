@@ -29,14 +29,14 @@ class ProxyHandler : public RequestHandler {
 
 	std::string ExtractNonProxyUri(const std::string& prefix, const std::string& uri);
 	Status SendRequestToServer(const std::string& host, const std::string& port, const Request& req, Response* resp, int depth=10);
- private:
-	void ConnectSocketToEndpoint(boost::asio::ip::tcp::socket* socket, std::string host, std::string port);
-	void ModifyRequestForProxy(const Request& request, MutableRequest* modified_request);
 	void ParseRedirectLocation(std::string location, std::string* new_path, std::string* new_host);
-	boost::system::error_code SocketReadUntil(boost::asio::ip::tcp::socket* socket, boost::asio::streambuf* buf, const std::string& sep);
-	boost::system::error_code SocketReadToEOF(boost::asio::ip::tcp::socket* socket, boost::asio::streambuf* buf, std::string* data);
-	void WriteToSocket(boost::asio::ip::tcp::socket* socket, const std::string& requestString);
-	bool ReadNextHeader(std::istream* response_stream, std::string* header_key, std::string* header_value);
+	void ModifyRequestForProxy(const Request& request, MutableRequest* modified_request);
+ protected:
+	virtual void ConnectSocketToEndpoint(boost::asio::ip::tcp::socket* socket, std::string host, std::string port);
+	virtual boost::system::error_code SocketReadUntil(boost::asio::ip::tcp::socket* socket, boost::asio::streambuf* buf, const std::string& sep);
+	virtual boost::system::error_code SocketReadToEOF(boost::asio::ip::tcp::socket* socket, boost::asio::streambuf* buf, std::string* data);
+	virtual void WriteToSocket(boost::asio::ip::tcp::socket* socket, const std::string& requestString);
+	virtual bool ReadNextHeader(std::istream* response_stream, std::string* header_key, std::string* header_value);
 
     std::string m_uri_prefix_;
 	std::string m_host_path_;

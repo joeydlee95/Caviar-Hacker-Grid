@@ -11,20 +11,26 @@
 
 using ::testing::Return;
 using ::testing::_;
-using ::testing::SetArgReferee;
+using ::testing::SetArgPointee;
 using ::testing::An;
+using ::testing::HasSubstr;
+using ::testing::DoAll;
+
+using boost::asio::ip::tcp;
+using boost::asio::streambuf;
+using std::string;
 
 class MockNginxConfig : public NginxConfig{
 public:
-  std::vector<std::string> find(const std::string& key) const {
+  std::vector<string> find(const string& key) const {
     return mocked_find(key);
   }
-  MOCK_CONST_METHOD1(mocked_find,std::vector<std::string>(const std::string& key));
+  MOCK_CONST_METHOD1(mocked_find,std::vector<string>(const string& key));
 };
 
 TEST(ProxyHandlerTest, InitTest) {
 	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
+	std::vector<string> set_tokens;
 	set_tokens.push_back("host");
 	set_tokens.push_back("ucla.edu");
 
@@ -35,7 +41,7 @@ TEST(ProxyHandlerTest, InitTest) {
 
 	EXPECT_CALL(mock_config, mocked_find("port"))
 		.WillOnce(
-				Return(std::vector<std::string>{})
+				Return(std::vector<string>{})
 				);
 
 	ProxyHandler handler;
@@ -48,10 +54,10 @@ TEST(ProxyHandlerTest, InitTest) {
 
 TEST(ProxyHandlerTest, InitPortTest) {
 	MockNginxConfig mock_config;
-	std::vector<std::string> host_tokens;
+	std::vector<string> host_tokens;
 	host_tokens.push_back("host");
 	host_tokens.push_back("ucla.edu");
-	std::vector<std::string> port_tokens;
+	std::vector<string> port_tokens;
 	port_tokens.push_back("port");
 	port_tokens.push_back("8080");
 
@@ -75,7 +81,7 @@ TEST(ProxyHandlerTest, InitPortTest) {
 
 TEST(ProxyHandlerTest, InitFailNoProxy) {
 	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
+	std::vector<string> set_tokens;
 	set_tokens.push_back("host");
 	EXPECT_CALL(mock_config, mocked_find("host"))
 		.WillOnce(
@@ -90,12 +96,12 @@ TEST(ProxyHandlerTest, InitFailNoProxy) {
 
 TEST(ProxyHandlerTest, InitFailBadPort) {
 	MockNginxConfig mock_config;
-	std::vector<std::string> set_tokens;
+	std::vector<string> set_tokens;
 	set_tokens.push_back("port");
 	set_tokens.push_back("65539"); // larger than max
 	EXPECT_CALL(mock_config, mocked_find("host"))
 		.WillOnce(
-				Return(std::vector<std::string>{"host", "ucla.edu"})
+				Return(std::vector<string>{"host", "ucla.edu"})
 				);
 	EXPECT_CALL(mock_config, mocked_find("port"))
 		.WillOnce(
@@ -111,14 +117,14 @@ TEST(ProxyHandlerTest, InitFailBadPort) {
 
 class ProxyHandlerTester : public ::testing::Test {
 	protected:
-		virtual std::unique_ptr<ProxyHandler> makeTestProxyHandler(std::string prefix) {
+		virtual std::unique_ptr<ProxyHandler> makeTestProxyHandler(string prefix) {
 			std::unique_ptr<ProxyHandler> handler(new ProxyHandler());
 
 			MockNginxConfig mock_config;
-			std::vector<std::string> host_tokens;
+			std::vector<string> host_tokens;
 			host_tokens.push_back("host");
 			host_tokens.push_back("ucla.edu");
-			std::vector<std::string> port_tokens;
+			std::vector<string> port_tokens;
 			port_tokens.push_back("port");
 			port_tokens.push_back("8080");
 
@@ -143,7 +149,7 @@ class ProxyHandlerTester : public ::testing::Test {
 TEST_F(ProxyHandlerTester, ExtractNonProxyUri_normal) {
 	auto handler = makeTestProxyHandler("/proxy");
 
-	std::string ret;
+	string ret;
 	ret = handler->ExtractNonProxyUri("/proxy", "/proxy/some/path");
 	EXPECT_EQ(ret, "/some/path");
 
@@ -153,30 +159,84 @@ TEST_F(ProxyHandlerTester, ExtractNonProxyUri_normal) {
 
 TEST_F(ProxyHandlerTester, ExtractNonProxyUri_empty) {
 	auto handler = makeTestProxyHandler("/");
-	std::string ret = handler->ExtractNonProxyUri("/", "/");
+	string ret = handler->ExtractNonProxyUri("/", "/");
 	EXPECT_EQ(ret, "/");
 }
 
+class MockSocketProxyHandler : public ProxyHandler {
+	public:
+		MOCK_METHOD3(ConnectSocketToEndpoint, void(tcp::socket* socket, string host, string port));
+		MOCK_METHOD3(SocketReadUntil, boost::system::error_code(tcp::socket* socket, streambuf* buf, const string& sep));
+		MOCK_METHOD3(SocketReadToEOF, boost::system::error_code(tcp::socket* socket, streambuf* buf, string* data));
+		MOCK_METHOD2(WriteToSocket, void(tcp::socket* socket, const string& requestString));
+		MOCK_METHOD3(ReadNextHeader, bool(std::istream* response_stream, string* header_key, string* header_value));
 
-TEST_F(ProxyHandlerTester, handleRootRequest) {
-	auto handler = makeTestProxyHandler("/");
+		static std::unique_ptr<MockSocketProxyHandler> createForTesting(string prefix, string host, string port) {
+			std::unique_ptr<MockSocketProxyHandler> handler(new MockSocketProxyHandler());
+			handler->m_uri_prefix_ = prefix;
+			handler->m_host_path_ = host;
+			handler->m_port_path_ = port;
+			return handler;
+		}
+};
 
-	std::string reqStr = (
+ACTION_P(AddStringToStream1, str) {
+	boost::asio::streambuf* response_buf = arg1;
+	std::ostream os(response_buf);
+	os << str;
+}
+
+TEST(ProxyHandlerTest, handleRootRequest) {
+	auto mockhandler = MockSocketProxyHandler::createForTesting("/", "localhost", "8080");
+
+	string reqStr = (
 			"GET / HTTP/1.1\r\n"
 			"User-Agent: Mozilla/1.0\r\n"
 			"\r\n"
 			);
 
+	EXPECT_CALL(*mockhandler, ConnectSocketToEndpoint(_, "localhost", "8080"))
+		.Times(1);
+
+	// should try to write incoming request to socket
+	EXPECT_CALL(*mockhandler, WriteToSocket(_, AllOf(
+					HasSubstr("GET / HTTP/1.1\r\n"),
+					HasSubstr("User-Agent: Mozilla/1.0\r\n"),
+					HasSubstr("\r\n\r\n")
+					)));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n"))
+		.WillOnce(DoAll(AddStringToStream1("HTTP/1.1 200 OK\r\n"), Return(boost::system::error_code())));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n\r\n"));
+
+	EXPECT_CALL(*mockhandler, ReadNextHeader(_, _, _))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Connection"),
+					SetArgPointee<2>("close"),
+					Return(true)
+					))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Content-Length"),
+					SetArgPointee<2>("10"),
+					Return(true)
+					))
+		.WillOnce(Return(false));
+
+	EXPECT_CALL(*mockhandler, SocketReadToEOF(_, _, _))
+		.WillOnce(DoAll(SetArgPointee<2>("0123456789"), Return(boost::system::error_code())));
+
 	std::unique_ptr<Request> req = Request::Parse(reqStr);
 	ASSERT_NE(req, nullptr);
 
-	/*
 	Response resp;
-	ASSERT_EQ(handler->HandleRequest(*req, &resp), RequestHandler::OK);
+	ASSERT_EQ(mockhandler->HandleRequest(*req, &resp), RequestHandler::OK);
 
 	string respStr = resp.ToString();
-	EXPECT_THAT(respStr, HasSubstr("200 OK"));
-	EXPECT_THAT(respStr, HasSubstr(reqStr));
-	*/
+	EXPECT_THAT(respStr, HasSubstr("HTTP/1.1 200 OK\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("Connection: close\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("Content-Length: 10\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("\r\n\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("0123456789"));
 }
 
