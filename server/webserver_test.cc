@@ -21,7 +21,7 @@ public:
   std::vector<std::string> find(const std::string& key) const {
     return mocked_find(key);
   }
-	MOCK_CONST_METHOD2(mocked_find,bool(const std::string& key, NginxConfig& value));  
+  MOCK_CONST_METHOD2(mocked_find,bool(const std::string& key, NginxConfig& value));  
   MOCK_CONST_METHOD1(mocked_find,std::vector<std::string>(const std::string& key));
 };
 
@@ -34,7 +34,7 @@ TEST(WebserverTest, FindPortFail) {
   Webserver server(&mock_config);
   EXPECT_CALL(mock_config, mocked_find("port"))
     .WillOnce(
-  	  Return(false)	
+      Return(false)  
     );
 
   EXPECT_FALSE(server.Init());

@@ -132,6 +132,7 @@ server_test
 webserver
 webserver_test
 httpRequest_test
+httpMutableRequest_test
 webserver_options_test
 http_echo_test
 http_file_test
@@ -144,6 +145,7 @@ echo_handler_test
 not_found_Handler_test
 request_handler_test
 status_handler_test
+blocking_handler_test
 # gcc coverage testing tool files
 
 *.gcno
