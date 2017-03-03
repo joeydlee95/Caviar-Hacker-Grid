@@ -5,11 +5,11 @@ import sys
 import os
 import telnetlib
 import time
-## Global Vars ##
-passing = True
-port = 2028;
-#TODO: add a data strx to hold names of failed tests
 
+## Global Vars ##
+passing = True #Variable to check if all tests passed
+port = 2020;
+failedTests = []
 
 ## Formatting Functions ##
 def line():
@@ -20,55 +20,57 @@ def nameTest(name):
 def pas():
     print("PASSED\n")
 
+## Begin Testing  ##
 if __name__ == "__main__":
     print("Starting Integration Test.\n")
+
     ## Start Server ##
-    TONULL = open(os.devnull, 'w')
-    serverProcess = subprocess.Popen(['./webserver', 'test_config'], stdout=TONULL)
+    outputToNull = open(os.devnull, 'w')
+    serverProcess = subprocess.Popen(['./webserver', 'test_config'], stdout=outputToNull)
+    time.sleep(3)
 
-    ## Testing Process ##
-    print("\nBeginning Integration Test.")
-    
-    nameTest("Basic Connection using Echo")
-    #echoReq = 'GET /echo HTTP/1.1\r\nHost: localhost:2026\r\n\r\n'
-    #echoTest = telnetlib.Telnet('localhost', 2026, 2)
-    #echoTest.write(req2.encode('ascii'))
-    #echoResult = echoTest.read_all().decode('utf-8')
-    #if echoResult == echoReq:
-    
-   # command2 = 'curl -Is localhost:' + str(port) + " | cat"
-    #output = subprocess.check_output(command2, shell=True)
-    #if output != "":
-    #    pas()
-    #    print(output)
-    #    line()
-    #else:
-    #    print("ERROR: Cannot connect to server.")
-    #    passing = False
-        
+#####        
+
+    ## Server Status Test ##
+    nameTest("Server Status Request")
+    statusRawRequest = 'GET /status HTTP/1.1\r\nHost: localhost:2020\r\n\r\n'
+    statusSession = telnetlib.Telnet('localhost', port)
+    print('Sending Status Request.\n')
+    statusSession.write(statusRawRequest.encode('ascii'))
+    statusResult = statusSession.read_all().decode('utf-8')
+    print(statusResult)
+    time.sleep(3)
+
+#####        
+
     ## Multithreading Test ##
-    req1 = 'GET /block HTTP/1.1\r\nHost: localhost:2028\r\n\r\n'
-    req2 = 'GET /echo HTTP/1.1\r\nHost: localhost:2028\r\n\r\n' 
     nameTest('Multithreading')
-    print('Sending blocking request\n')
-    p = telnetlib.Telnet('localhost', 2028, 2)
-    p.write(req1.encode('ascii'))
-    
-    time.sleep(4)
+    blockingRawRequest = 'GET /block HTTP/1.1\r\nHost: localhost:2020\r\n\r\n'
+    print('Sending Blocking Request\n')
+    blockingSession = telnetlib.Telnet('localhost', port)
+    blockingSession.write(blockingRawRequest.encode('ascii'))
 
-    print('Sending echo request after blocking request.\n')
-    q = telnetlib.Telnet('localhost', 2028, 2)
-    q.write(req2.encode('ascii'))
-    print('Sending echo request after blocking request.\n')
-    result = q.read_all().decode('utf-8')
+    time.sleep(3)
+
+    print('Sending Echo Request after Blocking Request.\n')
+    echoRawRequest = 'GET /echo HTTP/1.1\r\nHost: localhost:2020\r\n\r\n' 
+    echoSession = telnetlib.Telnet('localhost', port)
+    echoSession.write(echoRawRequest.encode('ascii'))
+    echoResult = echoSession.read_all().decode('utf-8')
     print("Result of echo request:\n")
-    print(result)
-    if result != req2:
+    print(echoResult)
+    #Echo tested elsewhere, just testing it returns here
+    if echoResult != "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nGET /echo HTTP/1.1\r\nHost: localhost:2020\r\n\r\n":
+        failedTests.append("Multithreading")
         passing = False
-    line()
-    ## Kill Server ##
+
+#####        
+    
+    ## Testing Complete, Kill Server ##
     print("\nKilling Server.\n")
     serverProcess.kill()
+
+#####        
     
     ## Conclusion ##
     print("Passed all tests?\n" + str(passing) + '\n')
@@ -76,6 +78,9 @@ if __name__ == "__main__":
         sys.exit(0)
         #return True
     else:
+        print("Failed Tests:")
+        for x in failedTests:
+            print(x, '\n')
         sys.exit(1)
         #return False
         
