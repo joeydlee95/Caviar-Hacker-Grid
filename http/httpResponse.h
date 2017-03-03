@@ -93,7 +93,7 @@ class Response {
   std::string ToString();
 
 private:
-	std::string reason_phrase_;
+  std::string reason_phrase_;
   ResponseCode status_code_;
   
   http::http_headers http_headers_;

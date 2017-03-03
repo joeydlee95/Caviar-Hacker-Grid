@@ -8,13 +8,13 @@
 
 
 RequestHandler::Status StatusHandler::Init(const std::string& uri_prefix,
-				      const NginxConfig& config) {
+              const NginxConfig& config) {
   return OK;
 }
 
 
 RequestHandler::Status StatusHandler::HandleRequest(const Request& request,
-					       Response* response) {
+                 Response* response) {
   if (status_ == nullptr) {
     return RequestHandler::MISCONFIGURED_HANDLER;
   }
