@@ -377,3 +377,49 @@ TEST(ProxyHandlerTest, handleRequest_redirect) {
 	EXPECT_THAT(respStr, HasSubstr("<file contents>"));
 }
 
+TEST(ProxyHandlerTest, handleRequest_redirectNoLoop) {
+	auto mockhandler = MockSocketProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	string reqStr = (
+			"GET /file.txt HTTP/1.1\r\n"
+			"User-Agent: Mozilla/1.0\r\n"
+			"\r\n"
+			);
+
+	InSequence forceExpectationsToBeInOrder;
+
+	string host = "ucla.edu";
+	string port = "80";
+
+	EXPECT_CALL(*mockhandler, ConnectSocketToEndpoint(_, host, port))
+		.Times(1);
+
+	// should try to write incoming request to socket
+	EXPECT_CALL(*mockhandler, WriteToSocket(_, AllOf(
+					HasSubstr("GET /file.txt HTTP/1.1\r\n"),
+					HasSubstr("User-Agent: Mozilla/1.0\r\n"),
+					HasSubstr("\r\n\r\n")
+					)));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n"))
+		.WillOnce(DoAll(AddStringToStream1("HTTP/1.1 302 Found\r\n"), Return(boost::system::error_code())));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n\r\n")) ;
+
+	// after redirect, we should try the new location with a new connection
+	EXPECT_CALL(*mockhandler, ReadNextHeader(_, _, _))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Location"),
+					SetArgPointee<2>("http://www.ucla.edu/newer/file.txt"),
+					Return(true)
+					));
+
+	std::unique_ptr<Request> req = Request::Parse(reqStr);
+	ASSERT_NE(req, nullptr);
+
+	Response resp;
+	mockhandler->SendRequestToServer(host, port, *req, &resp, 1/* as if we've been redirected a bunch already */);
+
+	EXPECT_EQ(resp.GetStatus(), Response::NOT_FOUND);
+}
+
