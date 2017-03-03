@@ -50,7 +50,7 @@ gcov: test
 	for test in $(GCOV); do gcov -r $$test; done
 
 test: $(TESTS)
-	for test in $(TESTS:%.cc=%); do ./$$test ; done
+	for test in $(TESTS:%.cc=%); do ./$$test || exit $1 ; done
 
 integration: webserver
 	python integration_test.py
