@@ -5,12 +5,12 @@
 #include "../http/httpResponse.h"
 #include "../http/http.h"
 
-RequestHandler::Status EchoHandler::Init(const std::string& uri_prefix,
+RequestHandler::Status BlockingHandler::Init(const std::string& uri_prefix,
 				      const NginxConfig& config) {
   return OK;
 }
 
-RequestHandler::Status EchoHandler::HandleRequest(const Request& request,
+RequestHandler::Status BlockingHandler::HandleRequest(const Request& request,
 					       Response* response) {
   for(;;) {
     continue;

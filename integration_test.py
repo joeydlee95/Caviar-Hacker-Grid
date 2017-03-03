@@ -5,7 +5,7 @@ import os
 import telnetlib
 ## Global Vars ##
 passing = True
-port = 3000;
+port = 2024;
 #TODO: add a data strx to hold names of failed tests
 
 
@@ -19,54 +19,47 @@ def pas():
     print("PASSED\n")
 
 ## Start Server ##
-subprocess.call("nohup ./webserver test_config >/dev/null 2>&1 &", shell = True)
-pid = subprocess.check_output('ps -a | grep webserver', shell = True).split()[0]
-print(pid)
-
+TONULL = open(os.devnull, 'w')
+serverProcess = subprocess.Popen(['./webserver', 'test_config'], stdout=TONULL)
 
 ## Testing Process ##
-print("\nBeginning Integration Test.\n")
-#For Curl: -I sends a HEAD Http Request; -s silences output to the terminal
+print("\nBeginning Integration Test.")
 
-#try :
-nameTest("Connection")
+nameTest("Basic Connection using Echo")
+#echoReq = 'GET /echo HTTP/1.1\r\nHost: localhost:2024\r\n\r\n'
+#echoTest = telnetlib.Telnet('localhost', 2025, 2)
+#echoTest.write(req2.encode('ascii'))
+#echoResult = echoTest.read_all().decode('utf-8')
+#if echoResult == echoReq:
+
 command2 = 'curl -Is localhost:' + str(port) + " | cat"
-output=subprocess.check_output(command2, shell=True)
+output = subprocess.check_output(command2, shell=True)
 if output != "":
     pas()
     print(output)
     line()
-#except CalledProcessError:
 else:
     print("ERROR: Cannot connect to server.")
     passing = False
 
 ## Multithreading Test ##
-partial1 = 'Get /echo HTTP/1.1\r\nHo'
-partial2 = 'st: localhost:2020\r\n\r\n'
-full = partial1 + partial2
+req1 = 'GET /block HTTP/1.1\r\nHost: localhost:2025\r\n\r\n'
+req2 = 'GET /echo HTTP/1.1\r\nHost: localhost:2025\r\n\r\n' 
+nameTest('Multithreading')
+print('Sending blocking request\n')
+p = telnetlib.Telnet('localhost', 2025, 2)
+p.write(req1.encode('ascii'))
 
-print('Multithreading Test\n')
-print('Sending partial request\n')
-p = telnetlib.Telnet('localhost', 2020, 2)
-p.write(partial1.encode('ascii'))
-
-print('Sending full request in middle of partial.\n')
-q = telnetlib.Telnet('localhost', 2020, 2)
-q.write(full.encode('ascii'))
-fullResult = q.read_all().decode('utf-8')
-
-print('Sending second half of partial request')
-p.write(partial2.encode('ascii'))
-partialResult = p.read_all().decode('utf-8')
-
-print(fullResult, partialResult)
-
-expectedResult = "";
-
-
+print('Sending echo request after blocking request.\n')
+q = telnetlib.Telnet('localhost', 2025, 2)
+q.write(req2.encode('ascii'))
+result = q.read_all().decode('utf-8')
+print("Result of echo request:\n")
+print(result)
+line()
 ## Kill Server ##
-subprocess.call('kill ' + pid, shell = True)
+print("\nKilling Server.\n")
+serverProcess.kill()
 
 
 ## Conclusion ##
