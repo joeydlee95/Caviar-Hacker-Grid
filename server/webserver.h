@@ -32,6 +32,8 @@ private:
   ServerStatus status_;
   HandlerConfiguration HandlerMapping_;
   bool AddHandler(std::string path, std::string HandlerName, NginxConfig* const config);
+  std::size_t threadsSupported = 2;
+  // = std::thread::hardware_concurrency()
 
 };
 
