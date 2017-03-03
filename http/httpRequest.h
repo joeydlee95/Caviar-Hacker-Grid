@@ -37,15 +37,10 @@ class Request {
   std::string body() const{
       return this->message_body_;
     }
-  
+
   Headers headers() const{
     return this->headers_;
   }
-
-	void SetURI(const std::string& uri);
-	void SetHeader(const std::string& header_name, const std::string& header_value);
-	void SetBody(const std::string& body);
-	std::string ToString();
 
 private:
   bool ParseRequest(const std::string& request);

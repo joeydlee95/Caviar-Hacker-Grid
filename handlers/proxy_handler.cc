@@ -180,7 +180,7 @@ RequestHandler::Status ProxyHandler::SendRequestToServer(
 
     WriteToSocket(&socket, modified_request.ToString());
 
-    const size_t bufSize = 8192; // guaranteed large enough for HTTP status line
+    const size_t bufSize = 8192; // boost will only read this much, buffer won't be overrun.
     boost::asio::streambuf response_buf(bufSize);
     std::istream response_stream(&response_buf);
 
