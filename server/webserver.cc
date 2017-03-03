@@ -60,7 +60,12 @@ boost::system::error_code WebServer::port_valid() {
   tcp::acceptor a(svc);
 
   boost::system::error_code ec;
-  a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), (unsigned short)port_ }, ec);
+  a.open(tcp::v4(), ec); 
+  if(ec != boost::system::errc::success) {
+    return ec;
+  }
+  a.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+  a.bind({ tcp::v4(), (unsigned short)port_ }, ec);
 
   return ec;
 }
