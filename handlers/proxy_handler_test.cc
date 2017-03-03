@@ -423,3 +423,179 @@ TEST(ProxyHandlerTest, handleRequest_redirectNoLoop) {
 	EXPECT_EQ(resp.GetStatus(), Response::NOT_FOUND);
 }
 
+class ProxyHandlerReadNextHeaderAccess : public ProxyHandler {
+	public:
+		// make public for testing
+		bool ReadNextHeader_(std::istream* response_stream, std::string* header_key, std::string* header_value) {
+			return ReadNextHeader(response_stream, header_key, header_value);
+		}
+};
+
+TEST(ProxyHandlerTest_ReadNextHeader, basic) {
+	ProxyHandlerReadNextHeaderAccess handler;
+
+	std::stringstream ss;
+	std::string CRLF = "\r\n";
+	ss << "Connection: close" << CRLF;
+	ss << "User-Agent: Mozilla/1.0" << CRLF;
+	ss << CRLF;
+
+	std::string header_key;
+	std::string header_value;
+	EXPECT_EQ(handler.ReadNextHeader_(&ss, &header_key, &header_value), true);
+	EXPECT_EQ(header_key, "Connection");
+	EXPECT_EQ(header_value, "close");
+
+	EXPECT_EQ(handler.ReadNextHeader_(&ss, &header_key, &header_value), true);
+	EXPECT_EQ(header_key, "User-Agent");
+	EXPECT_EQ(header_value, "Mozilla/1.0");
+
+	EXPECT_EQ(handler.ReadNextHeader_(&ss, &header_key, &header_value), false);
+}
+
+TEST(ProxyHandlerTest_ReadNextHeader, small_error) {
+	ProxyHandlerReadNextHeaderAccess handler;
+
+	std::stringstream ss;
+	std::string CRLF = "\r\n";
+	ss << "Connection: close" << CRLF;
+	ss << "User-Agent: Mozilla/1.0" << CRLF;
+	ss << "garble-flarble" << CRLF;
+	ss << CRLF;
+
+	std::string header_key;
+	std::string header_value;
+	EXPECT_EQ(handler.ReadNextHeader_(&ss, &header_key, &header_value), true);
+	EXPECT_EQ(header_key, "Connection");
+	EXPECT_EQ(header_value, "close");
+
+	EXPECT_EQ(handler.ReadNextHeader_(&ss, &header_key, &header_value), true);
+	EXPECT_EQ(header_key, "User-Agent");
+	EXPECT_EQ(header_value, "Mozilla/1.0");
+
+	EXPECT_EQ(handler.ReadNextHeader_(&ss, &header_key, &header_value), true);
+	EXPECT_EQ(header_key, "");
+	EXPECT_EQ(header_value, "");
+
+	EXPECT_EQ(handler.ReadNextHeader_(&ss, &header_key, &header_value), false);
+}
+
+class MockSetupProxyHandler : public ProxyHandler {
+	public:
+		static std::unique_ptr<MockSetupProxyHandler> createForTesting(string prefix, string host, string port) {
+			std::unique_ptr<MockSetupProxyHandler> handler(new MockSetupProxyHandler());
+			handler->m_uri_prefix_ = prefix;
+			handler->m_host_path_ = host;
+			handler->m_port_path_ = port;
+			return handler;
+		}
+};
+
+TEST(ProxyHandlerTest_ParseRedirectLocation, basic) {
+	auto handler = MockSetupProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	std::string new_path;
+	std::string new_host;
+	handler->ParseRedirectLocation("www.ucla.edu/some/path", &new_path, &new_host);
+
+	EXPECT_EQ(new_host, "www.ucla.edu");
+	EXPECT_EQ(new_path, "/some/path");
+}
+
+TEST(ProxyHandlerTest_ParseRedirectLocation, nopath) {
+	auto handler = MockSetupProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	std::string new_path;
+	std::string new_host;
+	handler->ParseRedirectLocation("www.ucla.edu", &new_path, &new_host);
+
+	EXPECT_EQ(new_host, "www.ucla.edu");
+	EXPECT_EQ(new_path, "/");
+}
+
+TEST(ProxyHandlerTest_ParseRedirectLocation, http) {
+	auto handler = MockSetupProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	std::string new_path;
+	std::string new_host;
+	handler->ParseRedirectLocation("http://www.ucla.edu/some/path", &new_path, &new_host);
+
+	EXPECT_EQ(new_host, "www.ucla.edu");
+	EXPECT_EQ(new_path, "/some/path");
+}
+
+TEST(ProxyHandlerTest_ParseRedirectLocation, https) {
+	auto handler = MockSetupProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	std::string new_path;
+	std::string new_host;
+	handler->ParseRedirectLocation("https://www.ucla.edu/some/path", &new_path, &new_host);
+
+	EXPECT_EQ(new_host, "www.ucla.edu");
+	EXPECT_EQ(new_path, "/some/path");
+}
+
+
+TEST(ProxyHandlerTest_ModifyRequestForProxy, simple) {
+	auto handler = MockSetupProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	string reqStr = (
+			"GET / HTTP/1.1\r\n"
+			"User-Agent: Mozilla/1.0\r\n"
+			"\r\n"
+			);
+
+	std::unique_ptr<Request> request = Request::Parse(reqStr);
+	MutableRequest modified_request(*request);
+	handler->ModifyRequestForProxy(*request, &modified_request);
+
+	string result = modified_request.ToString();
+
+	EXPECT_THAT(result, HasSubstr("GET / HTTP/1.1\r\n"));
+	EXPECT_THAT(result, HasSubstr("User-Agent: Mozilla/1.0\r\n"));
+	EXPECT_THAT(result, HasSubstr("Connection: close\r\n"));
+	EXPECT_THAT(result, HasSubstr("Host: ucla.edu"));
+	EXPECT_THAT(result, HasSubstr("\r\n\r\n"));
+}
+
+TEST(ProxyHandlerTest_ModifyRequestForProxy, overwriteHeaders) {
+	auto handler = MockSetupProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	string reqStr = (
+			"GET / HTTP/1.1\r\n"
+			"Connection: keep-alive\r\n"
+			"\r\n"
+			);
+
+	std::unique_ptr<Request> request = Request::Parse(reqStr);
+	MutableRequest modified_request(*request);
+	handler->ModifyRequestForProxy(*request, &modified_request);
+
+	string result = modified_request.ToString();
+
+	EXPECT_THAT(result, HasSubstr("GET / HTTP/1.1\r\n"));
+	EXPECT_THAT(result, HasSubstr("Connection: close\r\n"));
+	EXPECT_THAT(result, HasSubstr("\r\n\r\n"));
+}
+
+TEST(ProxyHandlerTest_ModifyRequestForProxy, RemovePrefix) {
+	auto handler = MockSetupProxyHandler::createForTesting("/proxy", "ucla.edu", "80");
+
+	string reqStr = (
+			"GET /proxy/some/path HTTP/1.1\r\n"
+			"User-Agent: Mozilla/1.0\r\n"
+			"\r\n"
+			);
+
+	std::unique_ptr<Request> request = Request::Parse(reqStr);
+	MutableRequest modified_request(*request);
+	handler->ModifyRequestForProxy(*request, &modified_request);
+
+	string result = modified_request.ToString();
+
+	EXPECT_THAT(result, HasSubstr("GET /some/path HTTP/1.1\r\n"));
+	EXPECT_THAT(result, HasSubstr("User-Agent: Mozilla/1.0\r\n"));
+	EXPECT_THAT(result, HasSubstr("Connection: close\r\n"));
+	EXPECT_THAT(result, HasSubstr("\r\n\r\n"));
+}
+
