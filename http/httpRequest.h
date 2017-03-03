@@ -37,7 +37,7 @@ class Request {
   std::string body() const{
       return this->message_body_;
     }
-  
+
   Headers headers() const{
     return this->headers_;
   }
@@ -49,10 +49,12 @@ private:
   bool processMessageBody(const std::string& request);
   bool processHeaders(const std::string& request);
 
+protected:
   //for example, we have "Accept-Languages: en-us" in the headers
   //just do header_fields[Accept-Languages]
   //notice that it will return "en-us"
   std::map<std::string,std::string> header_fields_;
+
 
   Headers headers_;
 
