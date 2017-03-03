@@ -13,5 +13,7 @@ path /proxy ProxyHandler {
 	port 80;
 }
 
+path /block BlockingHandler {}
+
 # Default response handler if no handlers match.
 default NotFoundHandler {}

@@ -4,6 +4,8 @@
 #include <map>
 #include <numeric>
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 #include "../handlers/request_handler.h"
 #include "../handlers/status_handler.h"
@@ -58,7 +60,12 @@ boost::system::error_code WebServer::port_valid() {
   tcp::acceptor a(svc);
 
   boost::system::error_code ec;
-  a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), (unsigned short)port_ }, ec);
+  a.open(tcp::v4(), ec); 
+  if(ec != boost::system::errc::success) {
+    return ec;
+  }
+  a.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+  a.bind({ tcp::v4(), (unsigned short)port_ }, ec);
 
   return ec;
 }
@@ -115,12 +122,20 @@ bool WebServer::Init() {
   return true;
 }
 
+//Modeled after team AAAA's class example and this stack overflow page:
 bool WebServer::run_server() {
-  try {  
+  try {
     boost::asio::io_service io_service;
+    std::vector<boost::shared_ptr<boost::thread>> tr;
     Server s(io_service, port_, &HandlerMapping_, &status_);
     printf("Running server on port %d...\n", port_);
-    io_service.run();
+    for (std::size_t k = 0; k < threadsSupported; ++k) {
+      boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service)));
+      tr.push_back(thread);
+    }
+    //wait on threads
+    for (std::size_t k = 0; k < threadsSupported; ++k)
+      tr[k]->join();
   } 
   catch (std::exception& e) {
     printf("Exception %s\n", e.what());

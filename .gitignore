@@ -145,6 +145,7 @@ echo_handler_test
 not_found_Handler_test
 request_handler_test
 status_handler_test
+blocking_handler_test
 # gcc coverage testing tool files
 
 *.gcno
