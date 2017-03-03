@@ -15,6 +15,7 @@ using ::testing::SetArgPointee;
 using ::testing::An;
 using ::testing::HasSubstr;
 using ::testing::DoAll;
+using ::testing::InSequence;
 
 using boost::asio::ip::tcp;
 using boost::asio::streambuf;
@@ -238,5 +239,141 @@ TEST(ProxyHandlerTest, handleRootRequest) {
 	EXPECT_THAT(respStr, HasSubstr("Content-Length: 10\r\n"));
 	EXPECT_THAT(respStr, HasSubstr("\r\n\r\n"));
 	EXPECT_THAT(respStr, HasSubstr("0123456789"));
+}
+
+TEST(ProxyHandlerTest, handleNonRootRequest) {
+	auto mockhandler = MockSocketProxyHandler::createForTesting("/proxy", "localhost", "8080");
+
+	string reqStr = (
+			"GET /proxy/some/path HTTP/1.1\r\n"
+			"User-Agent: Mozilla/1.0\r\n"
+			"Connection: keep-alive\r\n"
+			"\r\n"
+			);
+
+	EXPECT_CALL(*mockhandler, ConnectSocketToEndpoint(_, "localhost", "8080"))
+		.Times(1);
+
+	// should try to write incoming request to socket
+	EXPECT_CALL(*mockhandler, WriteToSocket(_, AllOf(
+					HasSubstr("GET /some/path HTTP/1.1\r\n"),
+					HasSubstr("User-Agent: Mozilla/1.0\r\n"),
+					HasSubstr("Connection: close\r\n"), // overwritten by proxy
+					HasSubstr("\r\n\r\n")
+					)));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n"))
+		.WillOnce(DoAll(AddStringToStream1("HTTP/1.1 404 Not Found\r\n"), Return(boost::system::error_code())));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n\r\n"));
+
+	EXPECT_CALL(*mockhandler, ReadNextHeader(_, _, _))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Connection"),
+					SetArgPointee<2>("close"),
+					Return(true)
+					))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Content-Length"),
+					SetArgPointee<2>("10"),
+					Return(true)
+					))
+		.WillOnce(Return(false));
+
+	EXPECT_CALL(*mockhandler, SocketReadToEOF(_, _, _))
+		.WillOnce(DoAll(SetArgPointee<2>("Not Found!"), Return(boost::system::error_code())));
+
+	std::unique_ptr<Request> req = Request::Parse(reqStr);
+	ASSERT_NE(req, nullptr);
+
+	Response resp;
+	ASSERT_EQ(mockhandler->HandleRequest(*req, &resp), RequestHandler::OK);
+
+	string respStr = resp.ToString();
+	EXPECT_THAT(respStr, HasSubstr("HTTP/1.1 404 Not Found\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("Connection: close\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("Content-Length: 10\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("\r\n\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("Not Found!"));
+}
+
+TEST(ProxyHandlerTest, handleRequest_redirect) {
+	auto mockhandler = MockSocketProxyHandler::createForTesting("/", "ucla.edu", "80");
+
+	string reqStr = (
+			"GET /file.txt HTTP/1.1\r\n"
+			"User-Agent: Mozilla/1.0\r\n"
+			"\r\n"
+			);
+
+	InSequence forceExpectationsToBeInOrder;
+
+	EXPECT_CALL(*mockhandler, ConnectSocketToEndpoint(_, "ucla.edu", "80"))
+		.Times(1);
+
+	// should try to write incoming request to socket
+	EXPECT_CALL(*mockhandler, WriteToSocket(_, AllOf(
+					HasSubstr("GET /file.txt HTTP/1.1\r\n"),
+					HasSubstr("User-Agent: Mozilla/1.0\r\n"),
+					HasSubstr("\r\n\r\n")
+					)));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n"))
+		.WillOnce(DoAll(AddStringToStream1("HTTP/1.1 302 Found\r\n"), Return(boost::system::error_code())));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n\r\n")) ;
+
+	// after redirect, we should try the new location with a new connection
+	EXPECT_CALL(*mockhandler, ReadNextHeader(_, _, _))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Location"),
+					SetArgPointee<2>("http://www.ucla.edu/newer/file.txt"),
+					Return(true)
+					));
+
+	EXPECT_CALL(*mockhandler, ConnectSocketToEndpoint(_, "www.ucla.edu", "80"))
+		.Times(1);
+
+	// should try to write incoming request to socket
+	EXPECT_CALL(*mockhandler, WriteToSocket(_, AllOf(
+					HasSubstr("GET /newer/file.txt HTTP/1.1\r\n"),
+					HasSubstr("User-Agent: Mozilla/1.0\r\n"),
+					HasSubstr("\r\n\r\n")
+					)));
+
+	// get correct response this time
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n"))
+		.WillOnce(DoAll(AddStringToStream1("HTTP/1.1 200 OK\r\n"), Return(boost::system::error_code())));
+
+	EXPECT_CALL(*mockhandler, SocketReadUntil(_, _, "\r\n\r\n")) ;
+
+	EXPECT_CALL(*mockhandler, ReadNextHeader(_, _, _))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Connection"),
+					SetArgPointee<2>("close"),
+					Return(true)
+					))
+		.WillOnce(DoAll(
+					SetArgPointee<1>("Content-Length"),
+					SetArgPointee<2>("15"),
+					Return(true)
+					))
+		.WillOnce(Return(false));
+
+	EXPECT_CALL(*mockhandler, SocketReadToEOF(_, _, _))
+		.WillOnce(DoAll(SetArgPointee<2>("<file contents>"), Return(boost::system::error_code())));
+
+	std::unique_ptr<Request> req = Request::Parse(reqStr);
+	ASSERT_NE(req, nullptr);
+
+	Response resp;
+	ASSERT_EQ(mockhandler->HandleRequest(*req, &resp), RequestHandler::OK);
+
+	string respStr = resp.ToString();
+	EXPECT_THAT(respStr, HasSubstr("HTTP/1.1 200 OK\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("Connection: close\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("Content-Length: 15\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("\r\n\r\n"));
+	EXPECT_THAT(respStr, HasSubstr("<file contents>"));
 }
 
